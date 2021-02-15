@@ -146,6 +146,11 @@ def ListWays(request):
             print("QUERY: ", serializer.data)
             return Response(serializer.data)
 
+            # post request accept data in json format. For example:
+            # {
+            #     "node_from": "1",
+            #     "node_to": "233"
+            # }
 
 
 
