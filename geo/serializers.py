@@ -59,3 +59,8 @@ class DijkstraSerializer(serializers.Serializer):
     agg_cost = serializers.FloatField()
 
 
+class VertexSerializer(serializers.Serializer):
+    node_from = serializers.IntegerField()
+    node_to = serializers.IntegerField()
+
+

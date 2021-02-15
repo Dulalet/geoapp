@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from geo.models import Building, BusStop, RedLine, Street
 from geo.serializers import UserSerializer, GroupSerializer, BuildingSerializer, \
-    BusStopSerializer, RedLineSerializer, StreetSerializer
+    BusStopSerializer, RedLineSerializer, StreetSerializer, DijkstraSerializer, VertexSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -109,22 +109,44 @@ class DeleteStreet(generics.DestroyAPIView):
     serializer_class = StreetSerializer
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 @permission_classes((AllowAny,))
 def ListWays(request):
-    conn = connections['default']
-    conn.ensure_connection()
-    with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-        cursor.execute("""select * from pgr_dijkstra(
-        'select gid as id, source, target, cost from ways',
-        1,
-        346,
-        directed := FALSE
-        );""")
-        row = cursor.fetchall()
-    # query = Dijkstra.objects.filter(seq__in=row)
-    print("QUERY: ", row)
-    return Response(row)
+    if request.method == 'GET':
+        conn = connections['default']
+        conn.ensure_connection()
+        with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            cursor.execute("""select * from pgr_dijkstra(
+            'select gid as id, source, target, cost from ways',
+            1,
+            346,
+            directed := FALSE
+            );""")
+            row = cursor.fetchall()
+        # query = Dijkstra.objects.filter(seq__in=row)
+        serializer = DijkstraSerializer(row, many=True)
+        print("QUERY: ", serializer.data)
+        return Response(serializer.data)
+
+    if request.method == 'POST':
+        vertexSerializer = VertexSerializer(data=request.data)
+        if vertexSerializer.is_valid():
+            conn = connections['default']
+            conn.ensure_connection()
+            with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+                cursor.execute("""select * from pgr_dijkstra(
+                        'select gid as id, source, target, cost from ways',
+                        {nodeFrom},
+                        {nodeTo},
+                        directed := FALSE
+                        );""".format(nodeFrom=request.data["node_from"], nodeTo=request.data["node_to"]))
+                row = cursor.fetchall()
+            # query = Dijkstra.objects.filter(seq__in=row)
+            serializer = DijkstraSerializer(row, many=True)
+            print("QUERY: ", serializer.data)
+            return Response(serializer.data)
+
+
 
 
 #         sql = """
