@@ -111,12 +111,3 @@ class Way(models.Model):
 
     def __str__(self):
         return self.name
-
-
-# class Dijkstra(models.Model):
-#     seq = models.IntegerField()
-#     path_seq = models.IntegerField()
-#     node = models.IntegerField()
-#     edge = models.IntegerField()
-#     cost = models.FloatField()
-#     agg_cost = models.FloatField()

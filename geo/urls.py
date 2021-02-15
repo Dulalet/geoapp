@@ -3,7 +3,7 @@ from .views import *
 
 
 urlpatterns = [
-    path('test/', ListWays, name="test"),
+    path('path/', ListWays, name="path"),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),
     path('buildings/create/', CreateBuilding.as_view(), name="buildings-create"),

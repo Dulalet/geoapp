@@ -58,15 +58,4 @@ class DijkstraSerializer(serializers.Serializer):
     cost = serializers.FloatField()
     agg_cost = serializers.FloatField()
 
-    # def create(self, validated_data):
-    #     return Dijkstra(**validated_data)
-
-    # def update(self, instance, validated_data):
-    #     instance.seq = validated_data.get('seq', instance.seq)
-    #     instance.path_seq = validated_data.get('path_seq', instance.path_seq)
-    #     instance.node = validated_data.get('node', instance.node)
-    #     instance.edge = validated_data.get('edge', instance.edge)
-    #     instance.cost = validated_data.get('cost', instance.cost)
-    #     instance.agg_cost = validated_data.get('agg_cost', instance.agg_cost)
-    #     return instance
 
