@@ -60,3 +60,63 @@ class Street(models.Model):
 
     class Meta:
         db_table = 'streets_project'
+
+
+class WaysVerticesPgr(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    osm_id = models.BigIntegerField(unique=True, blank=True, null=True)
+    eout = models.IntegerField(blank=True, null=True)
+    lon = models.DecimalField(max_digits=11, decimal_places=8, blank=True, null=True)
+    lat = models.DecimalField(max_digits=11, decimal_places=8, blank=True, null=True)
+    cnt = models.IntegerField(blank=True, null=True)
+    chk = models.IntegerField(blank=True, null=True)
+    ein = models.IntegerField(blank=True, null=True)
+    the_geom = models.PointField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ways_vertices_pgr'
+
+
+class Way(models.Model):
+    gid = models.BigAutoField(primary_key=True)
+    osm_id = models.BigIntegerField(blank=True, null=True)
+    # tag = models.ForeignKey(Configuration, models.DO_NOTHING, blank=True, null=True)
+    length = models.FloatField(blank=True, null=True)
+    length_m = models.FloatField(blank=True, null=True)
+    name = models.TextField(blank=True, null=True)
+    source = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='sources', db_column='source', blank=True, null=True)
+    target = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='targets', db_column='target', blank=True, null=True)
+    source_osm = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='sources_osm', db_column='source_osm', blank=True, null=True)
+    target_osm = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='targets_osm', db_column='target_osm', blank=True, null=True)
+    cost = models.FloatField(blank=True, null=True)
+    reverse_cost = models.FloatField(blank=True, null=True)
+    cost_s = models.FloatField(blank=True, null=True)
+    reverse_cost_s = models.FloatField(blank=True, null=True)
+    rule = models.TextField(blank=True, null=True)
+    one_way = models.IntegerField(blank=True, null=True)
+    oneway = models.TextField(blank=True, null=True)
+    x1 = models.FloatField(blank=True, null=True)
+    y1 = models.FloatField(blank=True, null=True)
+    x2 = models.FloatField(blank=True, null=True)
+    y2 = models.FloatField(blank=True, null=True)
+    maxspeed_forward = models.FloatField(blank=True, null=True)
+    maxspeed_backward = models.FloatField(blank=True, null=True)
+    priority = models.FloatField(blank=True, null=True)
+    the_geom = models.LineStringField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ways'
+
+    def __str__(self):
+        return self.name
+
+
+# class Dijkstra(models.Model):
+#     seq = models.IntegerField()
+#     path_seq = models.IntegerField()
+#     node = models.IntegerField()
+#     edge = models.IntegerField()
+#     cost = models.FloatField()
+#     agg_cost = models.FloatField()

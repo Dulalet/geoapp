@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from geo.models import Building, BusStop, RedLine, Street
+from geo.models import Building, BusStop, RedLine, Street, Way
 from rest_framework import serializers
 
 
@@ -39,3 +39,34 @@ class StreetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Street
         fields = ['ogc_fid', 'id', 'name', 'type', 'old_type', 'abreviatur', 'shape_leng', 'shape_le_1', 'wkb_geometry']
+
+
+class WaySerializer(serializers.Serializer):
+    # class Meta:
+    #     model = Way
+    #     # fields = ['gid', 'osm_id', 'length', 'length_m', 'name', 'source', 'target', 'cost', 'cost_s', 'the_geom']
+    #     # read_only_fields = ('length', 'length_m')
+    #     fields = '__all__'
+    seq = serializers.IntegerField()
+
+
+class DijkstraSerializer(serializers.Serializer):
+    seq = serializers.IntegerField()
+    path_seq = serializers.IntegerField()
+    node = serializers.IntegerField()
+    edge = serializers.IntegerField()
+    cost = serializers.FloatField()
+    agg_cost = serializers.FloatField()
+
+    # def create(self, validated_data):
+    #     return Dijkstra(**validated_data)
+
+    # def update(self, instance, validated_data):
+    #     instance.seq = validated_data.get('seq', instance.seq)
+    #     instance.path_seq = validated_data.get('path_seq', instance.path_seq)
+    #     instance.node = validated_data.get('node', instance.node)
+    #     instance.edge = validated_data.get('edge', instance.edge)
+    #     instance.cost = validated_data.get('cost', instance.cost)
+    #     instance.agg_cost = validated_data.get('agg_cost', instance.agg_cost)
+    #     return instance
+
