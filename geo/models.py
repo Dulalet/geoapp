@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import JSONField
 
 
 class Building(models.Model):
@@ -111,3 +112,25 @@ class Way(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class LayerMap(models.Model):
+    name = models.CharField(max_length=25)
+    poly = models.PolygonField(srid=3857)
+
+    class Meta:
+        managed = False
+        db_table = 'geo_layermap'
+
+    def __str__(self):
+        return 'Name: %s' % self.name
+
+
+class Layer(models.Model):
+    name = models.CharField(max_length=25)
+    data = JSONField()
+    geom = models.MultiPolygonField(srid=3857)
+
+    def __str__(self):
+        return 'Name: %s' % self.name
+

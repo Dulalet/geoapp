@@ -146,37 +146,15 @@ def ListWays(request):
             print("QUERY: ", serializer.data)
             return Response(serializer.data)
 
-            # post request accept data in json format. For example:
+            # post request accepts data in json format. For example:
             # {
             #     "node_from": "1",
             #     "node_to": "233"
             # }
 
 
-
-#         sql = """
-#                     SELECT *, v.lon::double precision, v.lat::double precision
-#                     FROM
-#                         pgr_dijkstra(
-#                             'SELECT {id} as id,
-#                                     {source} as source,
-#                                     {target} as target,
-#                                     {cost} as cost,
-#                                     {reverse_cost} as reverse_cost
-#                              FROM {edge_table}',
-#                             %s,
-#                             %s,
-#                             {directed}) as r,
-#                         {edge_table}_vertices_pgr as v
-#                     WHERE r.node=v.id
-#                     ORDER BY r.seq;
-#                     """.format(
-#             edge_table='ways',
-#             id=qs.,
-#             source=self._meta_data['source'],
-#             target=self._meta_data['target'],
-#             cost=self._meta_data['cost'],
-#             reverse_cost=self._meta_data['reverse_cost'],
-#             directed='TRUE'
-#             if self._meta_data['directed']
-#             else 'FALSE')
+@api_view(["GET"])
+@permission_classes((AllowAny,))
+def showLayer(request):
+    if request.method == 'GET':
+        pass
