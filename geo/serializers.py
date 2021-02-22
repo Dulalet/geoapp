@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from geo.models import Building, BusStop, RedLine, Street, Way
+from geo.models import Building, BusStop, RedLine, Street, Way, Layer
 from rest_framework import serializers
 
 
@@ -62,5 +62,11 @@ class DijkstraSerializer(serializers.Serializer):
 class VertexSerializer(serializers.Serializer):
     node_from = serializers.IntegerField()
     node_to = serializers.IntegerField()
+
+
+class LayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Layer
+        fields = '__all__'
 
 

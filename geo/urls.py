@@ -3,6 +3,9 @@ from .views import *
 
 
 urlpatterns = [
+    path('layers/', GetLayer.as_view(), name="layers"),
+    path('layers/<int:pk>', UpdateLayer.as_view(), name="update-layer"),
+
     path('path/', ListWays, name="path"),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),

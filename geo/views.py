@@ -6,9 +6,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from geo.models import Building, BusStop, RedLine, Street
+from geo.models import Building, BusStop, RedLine, Street, Layer
 from geo.serializers import UserSerializer, GroupSerializer, BuildingSerializer, \
-    BusStopSerializer, RedLineSerializer, StreetSerializer, DijkstraSerializer, VertexSerializer
+    BusStopSerializer, RedLineSerializer, StreetSerializer, DijkstraSerializer, VertexSerializer, LayerSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -153,8 +153,12 @@ def ListWays(request):
             # }
 
 
-@api_view(["GET"])
-@permission_classes((AllowAny,))
-def showLayer(request):
-    if request.method == 'GET':
-        pass
+class GetLayer(generics.ListAPIView):
+    queryset = Layer.objects.all()
+    serializer_class = LayerSerializer
+
+
+class UpdateLayer(generics.RetrieveUpdateAPIView):
+    queryset = Layer.objects.all()
+    serializer_class = LayerSerializer
+
