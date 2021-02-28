@@ -3,7 +3,7 @@ from django.contrib.gis.geos import GEOSGeometry, GeometryCollection
 
 from geo.models import Layer
 
-gdf = gpd.read_file('/home/daulet/Desktop/WGS2/Улицы_Project.shp')  # import shp to a dataframe
+gdf = gpd.read_file('/home/daulet/Desktop/WGS2/Здания_и_сооружения_Project.shp')  # import shp to a dataframe
 geomList = gdf.geometry.to_list()  # make a list of objects from dataframe
 
 # if geomList[0].type == 'Polygon':
@@ -26,9 +26,9 @@ geometry = GeometryCollection(geomList)
 
 
 layer = Layer()
-layer.name = 'Улицы_Project'
-layer.slug = 'streets'
-layer.url = 'https://sacral.openlayers.kz/geo/streets/'
+layer.name = 'Здания_и_сооружения_Project'
+layer.slug = 'buildings'
+layer.url = 'https://sacral.openlayers.kz/geo/buildings/'
 layer.data = gdf.to_json()
 layer.geom = geometry
 layer.save()

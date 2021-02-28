@@ -123,7 +123,7 @@ class Layer(models.Model):
     slug = models.CharField(max_length=25)
     url = models.CharField(max_length=50)
     data = JSONField()
-    geom = models.GeometryCollectionField(srid=3857)
+    geom = models.GeometryCollectionField(max_length=1000, srid=3857)
 
     def __str__(self):
         return 'Name: %s' % self.name

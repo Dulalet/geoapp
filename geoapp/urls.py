@@ -18,11 +18,16 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_swagger.views import get_swagger_view
 
+from geo.views import GetLayer, UpdateLayer
+
 schema_view = get_swagger_view(title='geoapp')
 
 urlpatterns = [
     path('', schema_view),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('geo/', include('geo.urls'))
+    path('geo/', include('geo.urls')),
+
+    path('getLayers/', GetLayer.as_view(), name="layers"),
+    path('getLayers/<int:pk>', UpdateLayer.as_view(), name="update-layer")
 ]
