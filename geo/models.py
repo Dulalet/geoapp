@@ -22,6 +22,7 @@ class Building(models.Model):
     wkb_geometry = models.GeometryField(srid=3857, blank=True, null=True)
 
     class Meta:
+        managed = False
         db_table = 'buildings_project'
 
 
@@ -33,6 +34,7 @@ class BusStop(models.Model):
     wkb_geometry = models.PointField(srid=3857, blank=True, null=True)
 
     class Meta:
+        managed = False
         db_table = 'bus_stops_project1'
 
 
@@ -45,6 +47,7 @@ class RedLine(models.Model):
     wkb_geometry = models.LineStringField(srid=3857, blank=True, null=True)
 
     class Meta:
+        managed = False
         db_table = 'red_lines_project'
 
 
@@ -60,6 +63,7 @@ class Street(models.Model):
     wkb_geometry = models.GeometryField(srid=3857, blank=True, null=True)
 
     class Meta:
+        managed = False
         db_table = 'streets_project'
 
 
@@ -116,9 +120,12 @@ class Way(models.Model):
 
 class Layer(models.Model):
     name = models.CharField(max_length=25)
+    slug = models.CharField(max_length=25)
+    url = models.CharField(max_length=50)
     data = JSONField()
-    geom = models.MultiPolygonField(srid=3857)
+    geom = models.GeometryCollectionField(srid=3857)
 
     def __str__(self):
         return 'Name: %s' % self.name
+
 
