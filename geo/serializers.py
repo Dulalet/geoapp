@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
-from geo.models import Building, BusStop, RedLine, Street, Way, Layer
 from rest_framework import serializers
+
+from geo.models import Building, BusStop, RedLine, Street, Layer, LayerFile
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -70,3 +71,11 @@ class LayerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UploadGeometrySerializer(serializers.ModelSerializer):
+    # name = serializers.CharField(max_length=25)
+    # files = serializers.FileField(max_length=100000,
+    #                               allow_empty_file=False,
+    #                               use_url=False)
+    class Meta:
+        model = LayerFile
+        fields = '__all__'

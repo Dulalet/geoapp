@@ -4,6 +4,7 @@ from .views import *
 
 urlpatterns = [
     path('path/', ListWays, name="path"),
+    path('addLayer/', addLayer, name='addLayer'),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),
     path('buildings/create/', CreateBuilding.as_view(), name="buildings-create"),

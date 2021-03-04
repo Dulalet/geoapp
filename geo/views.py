@@ -1,14 +1,18 @@
+import os
+
 import psycopg2
 from django.contrib.auth.models import User, Group
+from django.core.files.storage import FileSystemStorage
 from django.db import connections
-from rest_framework import viewsets, generics, permissions
+from rest_framework import viewsets, generics, permissions, views
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from geo.models import Building, BusStop, RedLine, Street, Layer
-from geo.serializers import UserSerializer, GroupSerializer, BuildingSerializer, \
-    BusStopSerializer, RedLineSerializer, StreetSerializer, DijkstraSerializer, VertexSerializer, LayerSerializer
+from geo.models import *
+from geo.serializers import *
+from geo.importshp import addLayer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -161,4 +165,29 @@ class GetLayer(generics.ListAPIView):
 class UpdateLayer(generics.RetrieveUpdateAPIView):
     queryset = Layer.objects.all()
     serializer_class = LayerSerializer
+
+
+# class addLayer(views.APIView):
+#     queryset = LayerFile.objects.all()
+#     serializer_class = UploadGeometrySerializer
+
+
+
+
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def addLayer(request):
+    serialized = UploadGeometrySerializer(data=request.data)
+    print(serialized)
+    if serialized.is_valid():
+        media = os.getcwd()
+        fs = FileSystemStorage(location=media+'/temp_upload_folder')
+        file = serialized.validated_data['file']
+        filename = fs.save(file.name, file)
+        uploaded_file_url = fs.url(filename)
+        addLayer(uploaded_file_url)
+        return Response(serialized)
+    return Response('Error', HTTP_400_BAD_REQUEST)
+
 

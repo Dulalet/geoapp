@@ -122,10 +122,18 @@ class Layer(models.Model):
     name = models.CharField(max_length=25)
     slug = models.CharField(max_length=25)
     url = models.CharField(max_length=50)
+    type = models.CharField(max_length=20)
+    color = models.CharField(max_length=25, default='[255, 255, 255, 0.5]')
     data = JSONField()
     geom = models.GeometryCollectionField(max_length=1000, srid=3857)
 
     def __str__(self):
-        return 'Name: %s' % self.name
+        return self.name
 
 
+class LayerFile(models.Model):
+    name = models.CharField(max_length=25)
+    file = models.FileField(upload_to='layer_files', editable=True)
+
+    def __str__(self):
+        return self.name

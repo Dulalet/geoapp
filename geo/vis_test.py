@@ -141,11 +141,11 @@ def testVisilibity():
     # Define another point that the 'observer' will see
     end_visible = vis.Point(415, 45)
 
-    # Necesary to generate the visibility polygon
+    # Necessary to generate the visibility polygon
     observer.snap_to_boundary_of(env, epsilon)
     observer.snap_to_vertices_of(env, epsilon)
 
-    # Obtein the visibility polygon of the 'observer' in the environmente
+    # Obtain the visibility polygon of the 'observer' in the environmente
     # previously define
     isovist = vis.Visibility_Polygon(observer, env, epsilon)
 
