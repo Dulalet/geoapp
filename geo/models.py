@@ -123,7 +123,7 @@ class Layer(models.Model):
     slug = models.CharField(max_length=25)
     url = models.CharField(max_length=50)
     type = models.CharField(max_length=20)
-    color = models.CharField(max_length=25, default='[255, 255, 255, 0.5]')
+    # color = models.CharField(max_length=25, default='[255, 255, 255, 0.5]')
     data = JSONField()
     geom = models.GeometryCollectionField(max_length=1000, srid=3857)
 

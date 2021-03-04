@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User, Group
+from django.contrib.gis.forms import GeometryField
 from rest_framework import serializers
 
 from geo.models import Building, BusStop, RedLine, Street, Layer, LayerFile
@@ -79,3 +80,8 @@ class UploadGeometrySerializer(serializers.ModelSerializer):
     class Meta:
         model = LayerFile
         fields = '__all__'
+
+
+class GeometrySerializer(serializers.Serializer):
+    geometry = GeometryField()
+

@@ -12,7 +12,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from geo.models import *
 from geo.serializers import *
-from geo.importshp import addLayer
+from geo.importshp import importLayer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -182,12 +182,16 @@ def addLayer(request):
     print(serialized)
     if serialized.is_valid():
         media = os.getcwd()
-        fs = FileSystemStorage(location=media+'/temp_upload_folder')
+        fs = FileSystemStorage(location=media+'/layer_files')
         file = serialized.validated_data['file']
         filename = fs.save(file.name, file)
-        uploaded_file_url = fs.url(filename)
-        addLayer(uploaded_file_url)
-        return Response(serialized)
+        uploaded_file_url = fs.path(filename)
+        serialized.save()
+        # import pdb
+        # pdb.set_trace()
+        geometry = importLayer(uploaded_file_url)
+        serialized_geom = GeometrySerializer(geometry)
+        return Response(serialized_geom.data)
     return Response('Error', HTTP_400_BAD_REQUEST)
 
 
