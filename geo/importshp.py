@@ -10,7 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry, GeometryCollection
 from geo.models import Layer
 
 
-def importLayer(filepath):
+def importLayer(name, filepath):
     path = Path(filepath)
     if (os.path.splitext(filepath)[1]) == '.zip':
         temp_dir = tempfile.TemporaryDirectory(dir=path.parent)
@@ -44,7 +44,7 @@ def importLayer(filepath):
 
         layer = Layer()
         layer.name = name_of_file
-        layer.slug = name_of_file[:-4]
+        layer.slug = name
         layer.url = 'https://sacral.openlayers.kz/geo/' + layer.slug + '/'
         layer.type = geomList[0].geom_type
         layer.data = gdf.to_json()
@@ -57,6 +57,6 @@ def importLayer(filepath):
         pass
 
     print("done")
-    return geometry
+    return layer
 
 # exec(open("geo/importshp.py").read()) this command is to run this file from shell

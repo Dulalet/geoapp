@@ -183,15 +183,18 @@ def addLayer(request):
     if serialized.is_valid():
         media = os.getcwd()
         fs = FileSystemStorage(location=media+'/layer_files')
+        name = serialized.validated_data['name']
         file = serialized.validated_data['file']
         filename = fs.save(file.name, file)
         uploaded_file_url = fs.path(filename)
+        serialized.validated_data.pop('file')
         serialized.save()
         # import pdb
         # pdb.set_trace()
-        geometry = importLayer(uploaded_file_url)
-        serialized_geom = GeometrySerializer(geometry)
-        return Response(serialized_geom.data)
+        layer = importLayer(name, uploaded_file_url)
+        serialized_layer = LayerSerializer(layer)
+        fs.delete(file.name)
+        return Response(serialized_layer.data)
     return Response('Error', HTTP_400_BAD_REQUEST)
 
 
