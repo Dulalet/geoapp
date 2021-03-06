@@ -4,3 +4,4 @@ docker-compose.yaml
 .env
 manage.py
 layer_files/
+geo/migrations/__pycache__/
