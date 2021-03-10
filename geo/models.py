@@ -137,3 +137,17 @@ class LayerFile(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Heatmap(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    fd1r05p1 = models.TextField(db_column='FD1R05P1', blank=True, null=True)  # Field name made lowercase.
+    fd1r06p1 = models.TextField(db_column='FD1R06P1', blank=True, null=True)  # Field name made lowercase.
+    fd1r06p2 = models.TextField(db_column='FD1R06P2', blank=True, null=True)  # Field name made lowercase.
+    fd1r072p1 = models.TextField(db_column='FD1R072P1', blank=True, null=True)  # Field name made lowercase.
+    fd1r07p1 = models.TextField(db_column='FD1R07P1', blank=True, null=True)  # Field name made lowercase.
+    geometry = models.PointField(srid=32642, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'heatmap'

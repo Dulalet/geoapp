@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from geo.models import Building, BusStop, RedLine, Street, Layer, LayerFile
+from geo.models import *
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -42,15 +42,6 @@ class StreetSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['ogc_fid', 'id', 'name', 'type', 'old_type', 'abreviatur', 'shape_leng', 'shape_le_1', 'wkb_geometry']
 
 
-class WaySerializer(serializers.Serializer):
-    # class Meta:
-    #     model = Way
-    #     # fields = ['gid', 'osm_id', 'length', 'length_m', 'name', 'source', 'target', 'cost', 'cost_s', 'the_geom']
-    #     # read_only_fields = ('length', 'length_m')
-    #     fields = '__all__'
-    seq = serializers.IntegerField()
-
-
 class DijkstraSerializer(serializers.Serializer):
     seq = serializers.IntegerField()
     path_seq = serializers.IntegerField()
@@ -72,15 +63,20 @@ class LayerSerializer(serializers.ModelSerializer):
 
 
 class UploadGeometrySerializer(serializers.ModelSerializer):
-    # name = serializers.CharField(max_length=25)
-    # files = serializers.FileField(max_length=100000,
-    #                               allow_empty_file=False,
-    #                               use_url=False)
     class Meta:
         model = LayerFile
         fields = '__all__'
 
 
-# class GeometrySerializer(serializers.ModelSerializer):
-#     fields =
+class HeatmapSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Heatmap
+        fields = '__all__'
+
+
+class CountObjectSerializer(serializers.Serializer):
+    pointX = serializers.FloatField()
+    pointY = serializers.FloatField()
+    radius = serializers.IntegerField()
+    file = serializers.FileField()
 

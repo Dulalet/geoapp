@@ -5,6 +5,7 @@ from .views import *
 urlpatterns = [
     path('path/', ListWays, name="path"),
     path('addLayer/', addLayer, name='addLayer'),
+    path('countObjects/', countObjects, name='countObjects'),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),
     path('buildings/create/', CreateBuilding.as_view(), name="buildings-create"),
@@ -25,4 +26,9 @@ urlpatterns = [
     path('streets/create/', CreateStreet.as_view(), name="streets-create"),
     path('streets/<int:pk>', UpdateStreet.as_view(), name="streets-update"),
     path('streets/<int:pk>/delete', DeleteStreet.as_view(), name="streets-delete"),
+
+    path('heatmap/', ListHeatmap.as_view(), name="heatmap"),
+    path('heatmap/create/', CreateHeatmap.as_view(), name="heatmap-create"),
+    path('heatmap/<int:pk>', UpdateHeatmap.as_view(), name="heatmap-update"),
+    path('heatmap/<int:pk>/delete', DeleteHeatmap.as_view(), name="heatmap-delete"),
 ]

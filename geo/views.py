@@ -1,18 +1,17 @@
 import os
 
 import psycopg2
-from django.contrib.auth.models import User, Group
 from django.core.files.storage import FileSystemStorage
 from django.db import connections
-from rest_framework import viewsets, generics, permissions, views
+from rest_framework import viewsets, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from geo.models import *
-from geo.serializers import *
 from geo.importshp import importLayer
+from geo.objectsInPolygon import numObjects
+from geo.serializers import *
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -113,6 +112,26 @@ class DeleteStreet(generics.DestroyAPIView):
     serializer_class = StreetSerializer
 
 
+class CreateHeatmap(generics.ListCreateAPIView):
+    queryset = Heatmap.objects.all()
+    serializer_class = HeatmapSerializer
+
+
+class ListHeatmap(generics.ListAPIView):
+    queryset = Heatmap.objects.all()
+    serializer_class = HeatmapSerializer
+
+
+class UpdateHeatmap(generics.RetrieveUpdateAPIView):
+    queryset = Heatmap.objects.all()
+    serializer_class = HeatmapSerializer
+
+
+class DeleteHeatmap(generics.DestroyAPIView):
+    queryset = Heatmap.objects.all()
+    serializer_class = HeatmapSerializer
+
+
 @api_view(["GET", "POST"])
 @permission_classes((AllowAny,))
 def ListWays(request):
@@ -167,19 +186,10 @@ class UpdateLayer(generics.RetrieveUpdateAPIView):
     serializer_class = LayerSerializer
 
 
-# class addLayer(views.APIView):
-#     queryset = LayerFile.objects.all()
-#     serializer_class = UploadGeometrySerializer
-
-
-
-
-
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def addLayer(request):
     serialized = UploadGeometrySerializer(data=request.data)
-    print(serialized)
     if serialized.is_valid():
         media = os.getcwd()
         fs = FileSystemStorage(location=media+'/layer_files')
@@ -189,12 +199,31 @@ def addLayer(request):
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
         serialized.save()
-        # import pdb
-        # pdb.set_trace()
         layer = importLayer(name, uploaded_file_url)
         serialized_layer = LayerSerializer(layer)
         fs.delete(file.name)
         return Response(serialized_layer.data)
     return Response('Error', HTTP_400_BAD_REQUEST)
 
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def countObjects(request):
+    serialized = CountObjectSerializer(data=request.data)
+    print('serialized: ', serialized)
+    if serialized.is_valid():
+        pointX = serialized.validated_data['pointX']
+        pointY = serialized.validated_data['pointY']
+        radius = serialized.validated_data['radius']
+        media = os.getcwd()
+        fs = FileSystemStorage(location=media + '/layer_files')
+        file = serialized.validated_data['file']
+        filename = fs.save(file.name, file)
+        # import pdb
+        # pdb.set_trace()
+        uploaded_file_url = fs.path(filename)
+        serialized.validated_data.pop('file')
+        objectsNum = numObjects(pointX, pointY, radius, uploaded_file_url)
+        fs.delete(file.name)
+        return Response(str(objectsNum))
 

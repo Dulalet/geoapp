@@ -7,34 +7,14 @@ from pathlib import Path
 import shapely
 import geopandas as gpd
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection
+from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from geo.models import Layer
 from geo.gpx2geopandas import importgpx
 
 
-def importLayer(name, filepath):
-    path = Path(filepath)
-    name_of_file = ntpath.split(filepath)[1]
-    extension = os.path.splitext(filepath)[1]
-    if extension == '.zip':
-        temp_dir = tempfile.TemporaryDirectory(dir=path.parent)
-        print(temp_dir.name)
-        with zipfile.ZipFile(filepath, 'r') as zip_ref:
-            zip_ref.extractall(temp_dir.name)
-
-        gdf = gpd.read_file(temp_dir.name + '/' + name_of_file[:-4] + '.shp')  # import shp to a dataframe
-        temp_dir.cleanup()
-    elif extension == '.kml':
-        gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
-        gdf = gpd.read_file(filepath, driver='KML')
-
-    elif extension == '.csv':
-        gdf = gpd.read_file(filepath)
-        gdf.crs = 'epsg:3857'
-    elif extension == '.geojson':
-        gdf = gpd.read_file(filepath)
-    # elif extension == '.gpx':
-    #     gdf = importgpx(filepath)
+def gdf2layer(gdf, name, name_of_file, extension):
     geomList = gdf.geometry.to_list()  # make a list of objects from dataframe
     if len(geomList) > 1000:
         print("number of objects is 1000 max")
@@ -53,8 +33,40 @@ def importLayer(name, filepath):
     layer.data = gdf.to_json()
     layer.geom = geometry
     layer.save()
-
-    print("done")
     return layer
+
+
+def importLayer(name, filepath):
+    path = Path(filepath)
+    name_of_file = ntpath.split(filepath)[1]
+    extension = os.path.splitext(filepath)[1]
+    if extension == '.zip':
+        temp_dir = tempfile.TemporaryDirectory(dir=path.parent)
+        print(temp_dir.name)
+        with zipfile.ZipFile(filepath, 'r') as zip_ref:
+            zip_ref.extractall(temp_dir.name)
+
+        gdf = gpd.read_file(temp_dir.name + '/' + name_of_file[:-4] + '.shp')  # import shp to a dataframe
+        temp_dir.cleanup()
+        return gdf2layer(gdf, name, name_of_file, extension)
+    elif extension == '.kml':
+        gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+        gdf = gpd.read_file(filepath, driver='KML')
+        return gdf2layer(gdf, name, name_of_file, extension)
+    elif extension == '.csv':
+        gdf = gpd.read_file(filepath)
+        gdf.crs = 'epsg:3857'
+        return gdf2layer(gdf, name, name_of_file, extension)
+    elif extension == '.geojson':
+        gdf = gpd.read_file(filepath)
+        return gdf2layer(gdf, name, name_of_file, extension)
+    # elif extension == '.gpx':
+    #     gdf = importgpx(filepath)
+    else:
+        return Response('Error: not valid file type', HTTP_400_BAD_REQUEST)
+
+
+
+
 
 # exec(open("geo/importshp.py").read()) this command is to run this file from shell

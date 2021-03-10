@@ -1,22 +1,51 @@
+import ntpath
+import os
+import tempfile
+import zipfile
+from pathlib import Path
+
 import geopandas as gpd
+from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from shapely.geometry import Point
 
 
-def countObjects(inputPoint, filename):
-    buildingsGDF = gpd.read_file('//home/daulet/Desktop/WGS2/geojson/Здания_и_сооружения_Project.shp.geojson')
-    buildingsList = buildingsGDF.geometry.to_list()
+def numObjects(pointX, pointY, radius, filepath):
+    path = Path(filepath)
+    name_of_file = ntpath.split(filepath)[1]
+    extension = os.path.splitext(filepath)[1]
+    if extension == '.zip':
+        temp_dir = tempfile.TemporaryDirectory(dir=path.parent)
+        print(temp_dir.name)
+        with zipfile.ZipFile(filepath, 'r') as zip_ref:
+            zip_ref.extractall(temp_dir.name)
 
-    inputPoint = Point(7959830.520, 6643715.849)
-    pointRadius = inputPoint.buffer(500)
+        objectsGDF = gpd.read_file(temp_dir.name + '/' + name_of_file[:-4] + '.shp')  # import shp to a dataframe
+        temp_dir.cleanup()
+    elif extension == '.kml':
+        gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+        objectsGDF = gpd.read_file(filepath, driver='KML')
+    elif extension == '.csv':
+        objectsGDF = gpd.read_file(filepath)
+        objectsGDF.crs = 'epsg:3857'
+    elif extension == '.geojson':
+        objectsGDF = gpd.read_file(filepath)
+    # elif extension == '.gpx':
+    #     objectsGDF = importgpx(filepath)
+    else:
+        return Response('Error: cant read file', HTTP_400_BAD_REQUEST)
+
+    # objectsGDF = gpd.read_file('//home/daulet/Desktop/WGS2/geojson/Здания_и_сооружения_Project.shp.geojson')
+    objectsList = objectsGDF.geometry.to_list()
+
+    # inputPoint = Point(7959830.520, 6643715.849)
+    inputPoint = Point(pointX, pointY)
+    pointRadius = inputPoint.buffer(radius)
 
     inside = []
-    for i in buildingsList:
+    for i in objectsList:
         if i.within(pointRadius):
             inside.append(i)
-            print("YES")
-        else:
-            print(".")
-    print(inside)
 
     return len(inside)
 
