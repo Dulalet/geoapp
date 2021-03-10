@@ -63,9 +63,14 @@ class LayerSerializer(serializers.ModelSerializer):
 
 
 class UploadGeometrySerializer(serializers.ModelSerializer):
+    # color = serializers.CharField(required=False)
     class Meta:
         model = LayerFile
         fields = '__all__'
+    #
+    # def get_validation_exclusions(self):
+    #     exclusions = super(UploadGeometrySerializer, self).get_validation_exclusions()
+    #     return exclusions + ['color']
 
 
 class HeatmapSerializer(serializers.ModelSerializer):
@@ -80,3 +85,7 @@ class CountObjectSerializer(serializers.Serializer):
     radius = serializers.IntegerField()
     file = serializers.FileField()
 
+
+class BufferOutputSerializer(serializers.Serializer):
+    kppPoints = serializers.ListField()
+    randomPoints = serializers.ListField()

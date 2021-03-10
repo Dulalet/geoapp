@@ -15,6 +15,7 @@ from geo.gpx2geopandas import importgpx
 
 
 def gdf2layer(gdf, name, name_of_file, extension):
+    # gdf = gdf.truncate(after=999)
     geomList = gdf.geometry.to_list()  # make a list of objects from dataframe
     if len(geomList) > 1000:
         print("number of objects is 1000 max")

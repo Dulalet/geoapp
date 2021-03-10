@@ -1,3 +1,4 @@
+import json
 import os
 
 import psycopg2
@@ -9,7 +10,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from geo.buffer import buffer_generate
 from geo.importshp import importLayer
+from geo.nearestObjects import nearestPoints
 from geo.objectsInPolygon import numObjects
 from geo.serializers import *
 
@@ -192,14 +195,14 @@ def addLayer(request):
     serialized = UploadGeometrySerializer(data=request.data)
     if serialized.is_valid():
         media = os.getcwd()
-        fs = FileSystemStorage(location=media+'/layer_files')
+        fs = FileSystemStorage(location=media + '/layer_files')
         name = serialized.validated_data['name']
         file = serialized.validated_data['file']
         filename = fs.save(file.name, file)
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
         serialized.save()
-        layer = importLayer(name, uploaded_file_url)
+        layer = importLayer(name=name, filepath=uploaded_file_url)
         serialized_layer = LayerSerializer(layer)
         fs.delete(file.name)
         return Response(serialized_layer.data)
@@ -226,4 +229,45 @@ def countObjects(request):
         objectsNum = numObjects(pointX, pointY, radius, uploaded_file_url)
         fs.delete(file.name)
         return Response(str(objectsNum))
+    return Response('Error', HTTP_400_BAD_REQUEST)
 
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def buffer(request):
+    serialized = CountObjectSerializer(data=request.data)
+    if serialized.is_valid():
+        pointX = serialized.validated_data['pointX']
+        pointY = serialized.validated_data['pointY']
+        radius = serialized.validated_data['radius']
+        media = os.getcwd()
+        fs = FileSystemStorage(location=media + '/layer_files')
+        file = serialized.validated_data['file']
+        filename = fs.save(file.name, file)
+        uploaded_file_url = fs.path(filename)
+        serialized.validated_data.pop('file')
+        kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, uploaded_file_url)
+        fs.delete(file.name)
+        return Response({'KPP': kpp_points.to_json(),
+                         'Random Points': randomPoints})
+    return Response('Error', HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def showNearest(request):
+    serialized = CountObjectSerializer(data=request.data)
+    if serialized.is_valid():
+        pointX = serialized.validated_data['pointX']
+        pointY = serialized.validated_data['pointY']
+        radius = serialized.validated_data['radius']
+        media = os.getcwd()
+        fs = FileSystemStorage(location=media + '/layer_files')
+        file = serialized.validated_data['file']
+        filename = fs.save(file.name, file)
+        uploaded_file_url = fs.path(filename)
+        serialized.validated_data.pop('file')
+        pointsDict = nearestPoints(pointX, pointY, radius, uploaded_file_url)
+        fs.delete(file.name)
+        return Response(json.dumps(pointsDict))
+    return Response('Error', HTTP_400_BAD_REQUEST)

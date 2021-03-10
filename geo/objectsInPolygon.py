@@ -48,6 +48,3 @@ def numObjects(pointX, pointY, radius, filepath):
             inside.append(i)
 
     return len(inside)
-
-# intersectionsGDF = gpd.GeoDataFrame(gpd.GeoSeries(intersectionGeoSeries))
-# intersectionsGDF = intersectionsGDF.rename(columns={0: 'geometry'}).set_geometry('geometry')
