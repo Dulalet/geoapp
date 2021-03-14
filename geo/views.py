@@ -1,9 +1,11 @@
 import json
 import os
+from pathlib import Path
 
 import psycopg2
 from django.core.files.storage import FileSystemStorage
 from django.db import connections
+from django.http import HttpResponse
 from rest_framework import viewsets, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -178,7 +180,7 @@ def ListWays(request):
             #     "node_to": "233"
             # }
 
-
+    
 class GetLayer(generics.ListAPIView):
     queryset = Layer.objects.all()
     serializer_class = LayerSerializer
@@ -212,7 +214,7 @@ def addLayer(request):
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def countObjects(request):
-    serialized = CountObjectSerializer(data=request.data)
+    serialized = PointRadiusSerializer(data=request.data)
     print('serialized: ', serialized)
     if serialized.is_valid():
         pointX = serialized.validated_data['pointX']
@@ -235,7 +237,7 @@ def countObjects(request):
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def buffer(request):
-    serialized = CountObjectSerializer(data=request.data)
+    serialized = PointRadiusSerializer(data=request.data)
     if serialized.is_valid():
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
@@ -256,7 +258,7 @@ def buffer(request):
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def showNearest(request):
-    serialized = CountObjectSerializer(data=request.data)
+    serialized = PointRadiusSerializer(data=request.data)
     if serialized.is_valid():
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
@@ -271,3 +273,28 @@ def showNearest(request):
         fs.delete(file.name)
         return Response(json.dumps(pointsDict))
     return Response('Error', HTTP_400_BAD_REQUEST)
+
+
+from geo.visibility_zones import get_visibility
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def get_visibility_zones(request):
+    serialized = PointRadiusSerializer(data=request.data)
+    if serialized.is_valid():
+        pointX = serialized.validated_data['pointX']
+        pointY = serialized.validated_data['pointY']
+        radius = serialized.validated_data['radius']
+        media = os.getcwd()
+        fs = FileSystemStorage(location=media + '/visibility_files')
+        file = serialized.validated_data['file']
+        filename = fs.save(file.name, file)
+        uploaded_file_url = fs.path(filename)
+        serialized.validated_data.pop('file')
+        # get_visibility(pointX, pointY, radius, uploaded_file_url)
+        path = Path(uploaded_file_url)
+        cmd = f"gdal_viewshed -md {radius} -ox {pointX} -oy {pointY} {uploaded_file_url} {path.parent}/out.tiff"
+        os.system(cmd)
+        return Response(str(path.parent) + '/out.tiff')
+    return Response('error', HTTP_400_BAD_REQUEST)
+
+

@@ -79,7 +79,7 @@ class HeatmapSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CountObjectSerializer(serializers.Serializer):
+class PointRadiusSerializer(serializers.Serializer):
     pointX = serializers.FloatField()
     pointY = serializers.FloatField()
     radius = serializers.IntegerField()

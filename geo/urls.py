@@ -8,6 +8,7 @@ urlpatterns = [
     path('countObjects/', countObjects, name='countObjects'),
     path('buffer/', buffer, name='buffer'),
     path('nearest/', showNearest, name='nearest'),
+    path('visibility/', get_visibility_zones),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),
     path('buildings/create/', CreateBuilding.as_view(), name="buildings-create"),

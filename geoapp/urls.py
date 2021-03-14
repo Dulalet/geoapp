@@ -29,5 +29,5 @@ urlpatterns = [
     path('geo/', include('geo.urls')),
 
     path('getLayers/', GetLayer.as_view(), name="layers"),
-    path('getLayers/<int:pk>', UpdateLayer.as_view(), name="update-layer")
+    path('getLayers/<int:pk>', UpdateLayer.as_view(), name="update-layer"),
 ]

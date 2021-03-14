@@ -84,7 +84,7 @@ def main():
     # return
     # work_folder = data_folder['dauka_tutorial_1']
     work_folder = Folder('/home/daulet/Desktop/zones')
-    original_path = work_folder['4-3-1.tif']
+    original_path = work_folder['4-3-1.tiff']
     logger.info("original_path: %s", original_path)
     original_ds = DataSet(original_path)
 
