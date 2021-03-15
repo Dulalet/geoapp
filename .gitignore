@@ -7,3 +7,5 @@ layer_files/
 geo/migrations/__pycache__/
 geo/__pycache__/
 geoapp/__pycache__/
+visibility_files/
+layer_files/

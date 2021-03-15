@@ -204,9 +204,13 @@ def addLayer(request):
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
         serialized.save()
-        layer = importLayer(name=name, filepath=uploaded_file_url)
-        serialized_layer = LayerSerializer(layer)
-        fs.delete(file.name)
+        try:
+            layer = importLayer(name=name, filepath=uploaded_file_url)
+            serialized_layer = LayerSerializer(layer)
+        except ImportError:
+            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+        finally:
+            fs.delete(file.name)
         return Response(serialized_layer.data)
     return Response('Error', HTTP_400_BAD_REQUEST)
 
@@ -215,7 +219,6 @@ def addLayer(request):
 @permission_classes((AllowAny,))
 def countObjects(request):
     serialized = PointRadiusSerializer(data=request.data)
-    print('serialized: ', serialized)
     if serialized.is_valid():
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
@@ -224,14 +227,16 @@ def countObjects(request):
         fs = FileSystemStorage(location=media + '/layer_files')
         file = serialized.validated_data['file']
         filename = fs.save(file.name, file)
-        # import pdb
-        # pdb.set_trace()
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
-        objectsNum = numObjects(pointX, pointY, radius, uploaded_file_url)
-        fs.delete(file.name)
+        try:
+            objectsNum = numObjects(pointX, pointY, radius, uploaded_file_url)
+        except ImportError:
+            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+        finally:
+            fs.delete(file.name)
         return Response(str(objectsNum))
-    return Response('Error', HTTP_400_BAD_REQUEST)
+    return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])
@@ -248,11 +253,15 @@ def buffer(request):
         filename = fs.save(file.name, file)
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
-        kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, uploaded_file_url)
-        fs.delete(file.name)
+        try:
+            kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, uploaded_file_url)
+        except ImportError:
+            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+        finally:
+            fs.delete(file.name)
         return Response({'KPP': kpp_points.to_json(),
                          'Random Points': randomPoints})
-    return Response('Error', HTTP_400_BAD_REQUEST)
+    return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])
@@ -269,10 +278,14 @@ def showNearest(request):
         filename = fs.save(file.name, file)
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
-        pointsDict = nearestPoints(pointX, pointY, radius, uploaded_file_url)
-        fs.delete(file.name)
+        try:
+            pointsDict = nearestPoints(pointX, pointY, radius, uploaded_file_url)
+        except ImportError:
+            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+        finally:
+            fs.delete(file.name)
         return Response(json.dumps(pointsDict))
-    return Response('Error', HTTP_400_BAD_REQUEST)
+    return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
 from geo.visibility_zones import get_visibility
@@ -295,6 +308,6 @@ def get_visibility_zones(request):
         cmd = f"gdal_viewshed -md {radius} -ox {pointX} -oy {pointY} {uploaded_file_url} {path.parent}/out.tiff"
         os.system(cmd)
         return Response(str(path.parent) + '/out.tiff')
-    return Response('error', HTTP_400_BAD_REQUEST)
+    return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
