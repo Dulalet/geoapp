@@ -33,7 +33,10 @@ def gdf2layer(gdf, name, name_of_file, extension):
     layer.type = geomList[0].geom_type
     layer.data = gdf.to_json()
     layer.geom = geometry
-    layer.save()
+    try:
+        layer.save()
+    except:
+        return Response('Could not save the file, it can be too long', HTTP_400_BAD_REQUEST)
     return layer
 
 
