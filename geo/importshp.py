@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from geo.models import Layer
-from geo.gpx2geopandas import importgpx
+# from geo.gpx2geopandas import importgpx
 
 
 def gdf2layer(gdf, name, name_of_file, extension):
