@@ -15,13 +15,16 @@ from geo.models import Layer
 
 
 def gdf2layer(gdf, name, name_of_file, extension):
-    # gdf = gdf.truncate(after=999)
+    gdf = gdf.truncate(after=999)
     geomList = gdf.geometry.to_list()  # make a list of objects from dataframe
     if len(geomList) > 1000:
         print("number of objects is 1000 max")
     geomList = geomList[0:1000]
     for i in range(len(geomList)):
-        geomList[i] = shapely.wkb.loads(shapely.wkb.dumps(geomList[i], output_dimension=2))
+        geomList[i] = shapely.wkb.loads(shapely.wkb.dumps(geomList[i], output_dimension=3))
+
+        if not geomList[i].has_z:
+            geomList[i] = shapely.ops.transform(lambda x, y: (x, y, 0), geomList[i])
 
         geomList[i] = geomList[i].wkt
         geomList[i] = GEOSGeometry(geomList[i], srid=3857)
@@ -46,7 +49,6 @@ def importLayer(name, filepath):
     extension = os.path.splitext(filepath)[1]
     if extension == '.zip':
         temp_dir = tempfile.TemporaryDirectory(dir=path.parent)
-        print(temp_dir.name)
         with zipfile.ZipFile(filepath, 'r') as zip_ref:
             zip_ref.extractall(temp_dir.name)
 

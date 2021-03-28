@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
-from django.contrib.postgres.fields import JSONField
+# from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 
 
 class Building(models.Model):
@@ -126,7 +127,7 @@ class Layer(models.Model):
     color = models.CharField(max_length=25, default='[255, 255, 255, 0.5]')
     tag = models.CharField(max_length=25, null=True)
     data = JSONField()
-    geom = models.GeometryCollectionField(max_length=1000, srid=3857)
+    geom = models.GeometryCollectionField(max_length=1000, srid=3857, dim=3)
 
     def __str__(self):
         return self.name
