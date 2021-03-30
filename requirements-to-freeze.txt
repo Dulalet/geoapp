@@ -3,4 +3,6 @@ django-rest-swagger
 djangorestframework
 geopandas
 psycopg2
-GDAL
+lgblkb-tools
+scikit-image
+scikit-learn

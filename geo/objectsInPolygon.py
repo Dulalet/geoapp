@@ -35,16 +35,13 @@ def numObjects(pointX, pointY, radius, filepath):
     else:
         return Response('Error: cant read file', HTTP_400_BAD_REQUEST)
 
-    # objectsGDF = gpd.read_file('//home/daulet/Desktop/WGS2/geojson/Здания_и_сооружения_Project.shp.geojson')
     objectsList = objectsGDF.geometry.to_list()
-
     # inputPoint = Point(7959830.520, 6643715.849)
     inputPoint = Point(pointX, pointY)
     pointRadius = inputPoint.buffer(radius)
-
     inside = []
     for i in objectsList:
         if i.within(pointRadius):
+            i = i.to_wkt()
             inside.append(i)
-
-    return len(inside)
+    return len(inside), inside

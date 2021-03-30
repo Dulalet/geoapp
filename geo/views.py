@@ -230,12 +230,12 @@ def countObjects(request):
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
         try:
-            objectsNum = numObjects(pointX, pointY, radius, uploaded_file_url)
+            objectsNum, objects = numObjects(pointX, pointY, radius, uploaded_file_url)
         except ImportError:
             return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
         finally:
             fs.delete(file.name)
-        return Response(str(objectsNum))
+        return Response({'number of objects': str(objectsNum), 'objects': objects})
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 

@@ -86,6 +86,6 @@ class PointRadiusSerializer(serializers.Serializer):
     file = serializers.FileField()
 
 
-class BufferOutputSerializer(serializers.Serializer):
-    kppPoints = serializers.ListField()
-    randomPoints = serializers.ListField()
+class CountObjectSerializer(serializers.Serializer):
+    pointsNum = serializers.IntegerField()
+    pointsList = serializers.ListField()

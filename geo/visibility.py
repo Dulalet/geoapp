@@ -1,25 +1,27 @@
-import shapely.geometry as shg
-import matplotlib.pyplot as plt
-import shapely.affinity as shaff
 from functools import partial
+# from sklearn.preprocessing import MinMaxScaler
+from pathlib import Path
 
 import geopandas as gpd
+import numpy as np
+import shapely.affinity as shaff
+import shapely.geometry as shg
 # from pathlib import Path
 import visilibity as vis
-import numpy as np
 from PIL import Image
 from lgblkb_tools import logger, Folder
 from lgblkb_tools.common.utils import run_cmd
 from lgblkb_tools.gdal_datasets import DataSet
-from lgblkb_tools.geometry import ThePoly, FieldPoly, ThePoint
+from lgblkb_tools.geometry import FieldPoly
 # from lgblkb_tools.geometry.field_utils import generate_visible_poly
 from lgblkb_tools.geometry.field_utils import epsilon
 # from lgblkb_tools.visualize import Plotter
 # from osgeo import gdal
+from lgblkb_tools.visualize import Plotter
 from scipy.ndimage import gaussian_filter, binary_erosion, binary_dilation
 from skimage.filters import threshold_otsu
-# from sklearn.preprocessing import MinMaxScaler
-from pathlib import Path
+
+
 # from shapely.geometry import Polygon
 
 
@@ -84,7 +86,7 @@ def main():
     # return
     # work_folder = data_folder['dauka_tutorial_1']
     work_folder = Folder('/home/daulet/Desktop/zones')
-    original_path = work_folder['4-3-1.tiff']
+    original_path = work_folder['4-3-1_out.tiff']
     logger.info("original_path: %s", original_path)
     original_ds = DataSet(original_path)
 
@@ -93,26 +95,26 @@ def main():
     filtered_array = gaussian_filter(orig_array, sigma=1)
     otsu_threshold = threshold_otsu(filtered_array)
     mask = filtered_array > otsu_threshold
-    eroded_mask = binary_erosion(mask, iterations=1)
-    dilated_mask: np.ndarray = binary_dilation(eroded_mask, iterations=1).astype(int)
+    eroded_mask = binary_erosion(mask, iterations=5)
+    dilated_mask: np.ndarray = binary_dilation(eroded_mask, iterations=5).astype(int)
     # output to tiff
     # DataSet.from_array(dilated_mask, original_ds.geo_info) \
     #     .to_file(str(Path(original_path).with_name('output.tiff')), 'GTiff', no_data_value=0, dtype=gdal.GDT_Byte)
     geoms: gpd.GeoSeries = vectorize(dilated_mask, work_folder['vectorized.geojson'], original_ds)
     geom_extent = shg.Polygon(geoms.cascaded_union.envelope.boundary)
-    # FieldPoly().bounds_xy
-    # shg.Polygon(shg.Polygon().boundary)
-
-    # for geom in geoms:
-    #     geom_extent = geom_extent.difference(geom)
-    # otirik_env = FieldPoly(geom_extent).plot(c='red')
-    # # res = otirik_env.get_visible_poly(ThePoint(otirik_env.geometry.centroid)).plot(c='k').plot()
-    # res = otirik_env.get_visible_poly(ThePoint([0, 0])).plot(c='k').plot()
-    # # logger.info("res:\n%s", res)
+        # FieldPoly().bounds_xy
+        # shg.Polygon(shg.Polygon().boundary)
+    
+        # for geom in geoms:
+        #     geom_extent = geom_extent.difference(geom)
+        # otirik_env = FieldPoly(geom_extent).plot(c='red')
+        # # res = otirik_env.get_visible_poly(ThePoint(otirik_env.geometry.centroid)).plot(c='k').plot()
+        # res = otirik_env.get_visible_poly(ThePoint([0, 0])).plot(c='k').plot()
+        # # logger.info("res:\n%s", res)
     # # visible_zone.plot()
     # plt.show()
 
-    print('!!!!!!!!!', geom_extent)
+    print('!!!!!!!!!', geoms)
 
     # for i in range(len(geoms)):
     #     x_arr, y_arr = geoms[i].exterior.coords.xy
@@ -145,15 +147,10 @@ def main():
 
     # isovist = vis.Visibility_Polygon(observer, env, epsilon)
 
-
-
-
-
-
-    # plotter = Plotter()
-    # plotter.add_images(mask, eroded_mask, dilated_mask)
-    # plotter.plot(lbrtwh=(1e-3, 1e-3, 1 - 1e-3, 1 - 1e-3, 1e-3, 0)).show()
-    # return
+    plotter = Plotter()
+    plotter.add_images(mask, eroded_mask, dilated_mask)
+    plotter.plot(lbrtwh=(1e-3, 1e-3, 1 - 1e-3, 1 - 1e-3, 1e-3, 0)).show()
+    return
 
 
 if __name__ == '__main__':
