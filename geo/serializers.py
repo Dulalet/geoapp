@@ -86,6 +86,19 @@ class PointRadiusSerializer(serializers.Serializer):
     file = serializers.FileField()
 
 
+class VisibilityZonesSerializer(serializers.Serializer):
+    observer_x = serializers.FloatField()
+    observer_y = serializers.FloatField()
+    observer_radius = serializers.IntegerField(default=150)
+    observer_height = serializers.IntegerField(default=10)
+    file = serializers.FileField()
+    second_observer_x = serializers.FloatField(default=None)
+    second_observer_y = serializers.FloatField(default=None)
+    second_observer_radius = serializers.IntegerField(default=150)
+    second_observer_height = serializers.IntegerField(default=10)
+    second_file = serializers.FileField(default=None)
+
+
 class CountObjectSerializer(serializers.Serializer):
     pointsNum = serializers.IntegerField()
     pointsList = serializers.ListField()

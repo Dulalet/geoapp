@@ -292,22 +292,39 @@ from geo.visibility_zones import get_visibility
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def get_visibility_zones(request):
-    serialized = PointRadiusSerializer(data=request.data)
+    serialized = VisibilityZonesSerializer(data=request.data)
     if serialized.is_valid():
-        pointX = serialized.validated_data['pointX']
-        pointY = serialized.validated_data['pointY']
-        radius = serialized.validated_data['radius']
+        observer_x = serialized.validated_data['observer_x']
+        observer_y = serialized.validated_data['observer_y']
+        observer_radius = serialized.validated_data['observer_radius']
+        observer_height = serialized.validated_data['observer_height']
+        file = serialized.validated_data['file']
+        second_observer_x = serialized.validated_data['second_observer_x']
+        second_observer_y = serialized.validated_data['second_observer_y']
+        second_observer_radius = serialized.validated_data['second_observer_radius']
+        second_observer_height = serialized.validated_data['second_observer_height']
+        second_file = serialized.validated_data['second_file']
+
         media = os.getcwd()
         fs = FileSystemStorage(location=media + '/visibility_files')
-        file = serialized.validated_data['file']
         filename = fs.save(file.name, file)
         uploaded_file_url = fs.path(filename)
         serialized.validated_data.pop('file')
-        # get_visibility(pointX, pointY, radius, uploaded_file_url)
         path = Path(uploaded_file_url)
-        cmd = f"gdal_viewshed -md {radius} -ox {pointX} -oy {pointY} {uploaded_file_url} {path.parent}/out.tiff"
+        cmd = f"gdal_viewshed -md {observer_radius} -ox {observer_x} -oy {observer_y} -oz {observer_height} {uploaded_file_url} {path.parent}/out1.tiff"
+        file_path = str(path.parent) + '/out1.tiff'
         os.system(cmd)
-        return Response(str(path.parent) + '/out.tiff')
+        if second_observer_x and second_observer_y and second_file:
+            cmd = f"gdal_viewshed -md {second_observer_radius} -ox {second_observer_x} -oy {second_observer_y} -oz {second_observer_height} -vv 200 {uploaded_file_url} {path.parent}/out2.tiff"
+            os.system(cmd)
+            second_file_path = str(path.parent) + '/out2.tiff'
+            result = get_visibility(file_path, second_file_path)
+            fs.delete(file.name)
+            fs.delete(second_file.name)
+        else:
+            result = get_visibility(file_path)
+            fs.delete(file.name)
+        return Response()
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 

@@ -20,7 +20,6 @@ from lgblkb_tools.geometry.field_utils import epsilon
 from lgblkb_tools.visualize import Plotter
 from scipy.ndimage import gaussian_filter, binary_erosion, binary_dilation
 from skimage.filters import threshold_otsu
-import matplotlib.pyplot as plt
 
 
 # from shapely.geometry import Polygon
@@ -97,25 +96,61 @@ def main():
     otsu_threshold = threshold_otsu(filtered_array)
     mask = filtered_array > otsu_threshold
     eroded_mask = binary_erosion(mask, iterations=5)
-    filtered_mask: np.ndarray = binary_dilation(eroded_mask, iterations=5).astype(int)
+    dilated_mask: np.ndarray = binary_dilation(eroded_mask, iterations=5).astype(int)
     # output to tiff
     # DataSet.from_array(dilated_mask, original_ds.geo_info) \
     #     .to_file(str(Path(original_path).with_name('output.tiff')), 'GTiff', no_data_value=0, dtype=gdal.GDT_Byte)
-    geoms: gpd.GeoSeries = vectorize(filtered_mask, work_folder['vectorized.geojson'], original_ds)
-    # geom_extent = shg.Polygon(geoms.cascaded_union.envelope.boundary)
+    geoms: gpd.GeoSeries = vectorize(dilated_mask, work_folder['vectorized.geojson'], original_ds)
+    geom_extent = shg.Polygon(geoms.cascaded_union.envelope.boundary)
+    # FieldPoly().bounds_xy
+    # shg.Polygon(shg.Polygon().boundary)
 
-    # ----------visualize and check:---------------------------
+    # for geom in geoms:
+    #     geom_extent = geom_extent.difference(geom)
+    # otirik_env = FieldPoly(geom_extent).plot(c='red')
+    # # res = otirik_env.get_visible_poly(ThePoint(otirik_env.geometry.centroid)).plot(c='k').plot()
+    # res = otirik_env.get_visible_poly(ThePoint([0, 0])).plot(c='k').plot()
+    # # logger.info("res:\n%s", res)
+    # # visible_zone.plot()
+    # plt.show()
+
     print('!!!!!!!!!', geoms)
-    for geom in geoms:
-        plt.plot(*geom.exterior.xy)
-    plt.show()
+
+    # for i in range(len(geoms)):
+    #     x_arr, y_arr = geoms[i].exterior.coords.xy
+    #     holes = [[0] * len(x_arr)] * len(geoms)
+    #     for j in range(len(x_arr)):
+    #         holes[i][j] = vis.Point(x_arr[j], y_arr[j])
+    #         holes_x = holes[i][j].x()
+
+    vis_polygons = []
+    x_arr = []
+    y_arr = []
+    for i in range(len(geoms)):
+        points = makePoints(geoms[i])
+        vis_polygons.append(vis.Polygon(points))
+        x_arr.append(getXPoints(points))
+        y_arr.append(getYpoints(points))
+        print('Hole in standard form: ', vis_polygons[i].is_in_standard_form())
+    points = makePoints(geom_extent)
+    walls = vis.Polygon(points)
+    # vis_polygons.insert(0, walls)
+    env = vis.Environment([walls, vis_polygons[0]])
+
+    print('Walls in standard form : ', walls.is_in_standard_form())
+    print('Environment is valid : ', env.is_valid(epsilon))
+
+    observer = vis.Point(673000, 5665000)
+    observer.snap_to_boundary_of(env, epsilon)
+    print('!!!!', vis_polygons, '!!!!!!')
+    observer.snap_to_vertices_of(env, epsilon)
+
+    # isovist = vis.Visibility_Polygon(observer, env, epsilon)
 
     plotter = Plotter()
-    # plotter.add_images(mask, eroded_mask, dilated_mask)
-    plotter.add_images(mask, filtered_mask)
+    plotter.add_images(mask, eroded_mask, dilated_mask)
     plotter.plot(lbrtwh=(1e-3, 1e-3, 1 - 1e-3, 1 - 1e-3, 1e-3, 0)).show()
     return
-    # ----------------------------------------------------------
 
 
 if __name__ == '__main__':
