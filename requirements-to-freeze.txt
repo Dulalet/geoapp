@@ -3,3 +3,4 @@ django-rest-swagger
 djangorestframework
 geopandas
 psycopg2
+GDAL

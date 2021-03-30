@@ -14,13 +14,13 @@ from lgblkb_tools.gdal_datasets import DataSet
 from lgblkb_tools.geometry import ThePoly, FieldPoly, ThePoint
 # from lgblkb_tools.geometry.field_utils import generate_visible_poly
 from lgblkb_tools.geometry.field_utils import epsilon
-from lgblkb_tools.visualize import Plotter
+# from lgblkb_tools.visualize import Plotter
 # from osgeo import gdal
 from scipy.ndimage import gaussian_filter, binary_erosion, binary_dilation
 from skimage.filters import threshold_otsu
 # from sklearn.preprocessing import MinMaxScaler
 from pathlib import Path
-from shapely.geometry import Polygon
+# from shapely.geometry import Polygon
 
 
 def set_georeference(plain_geom, ds: DataSet, nrows=None):
