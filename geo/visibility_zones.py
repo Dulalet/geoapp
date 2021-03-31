@@ -44,6 +44,9 @@ def get_visibility(filepath, second_filepath=None):
     original_path = work_folder[filepath]
     logger.info("original_path: %s", original_path)
     original_ds = DataSet(original_path)
+    # plt.imshow(original_ds.array)
+    # plt.show()
+    # return
 
     orig_array = np.where(original_ds.array == -9999, np.nan, original_ds.array)
     orig_array = np.where(np.isnan(orig_array), np.nanmin(orig_array), orig_array)
