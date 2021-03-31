@@ -30,8 +30,6 @@ def numObjects(pointX, pointY, radius, filepath):
         objectsGDF.crs = 'epsg:3857'
     elif extension == '.geojson':
         objectsGDF = gpd.read_file(filepath)
-    # elif extension == '.gpx':
-    #     objectsGDF = importgpx(filepath)
     else:
         return Response('Error: cant read file', HTTP_400_BAD_REQUEST)
 

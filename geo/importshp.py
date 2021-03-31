@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from geo.models import Layer
-# from geo.gpx2geopandas import importgpx
 
 
 def gdf2layer(gdf, name, name_of_file, extension):
@@ -66,12 +65,8 @@ def importLayer(name, filepath):
     elif extension == '.geojson':
         gdf = gpd.read_file(filepath)
         return gdf2layer(gdf, name, name_of_file, extension)
-    # elif extension == '.gpx':
-    #     gdf = importgpx(filepath)
     else:
         return Response('Error: not valid file type', HTTP_400_BAD_REQUEST)
-
-
 
 
 

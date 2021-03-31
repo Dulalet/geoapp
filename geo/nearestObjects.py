@@ -11,8 +11,6 @@ from shapely.geometry import Point
 
 
 def nearestPoints(pointX, pointY, radius, filepath):
-    # pointsGDF = gpd.read_file('//home/daulet/Desktop/WGS2/geojson/Остановки_Project1.shp.geojson')
-
     path = Path(filepath)
     name_of_file = ntpath.split(filepath)[1]
     extension = os.path.splitext(filepath)[1]
@@ -32,8 +30,6 @@ def nearestPoints(pointX, pointY, radius, filepath):
         objectsGDF.crs = 'epsg:3857'
     elif extension == '.geojson':
         objectsGDF = gpd.read_file(filepath)
-    # elif extension == '.gpx':
-    #     objectsGDF = importgpx(filepath)
     else:
         return Response('Error: cant read file', HTTP_400_BAD_REQUEST)
 

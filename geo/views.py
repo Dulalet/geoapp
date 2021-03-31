@@ -137,6 +137,14 @@ class DeleteHeatmap(generics.DestroyAPIView):
     serializer_class = HeatmapSerializer
 
 
+# SQL_PATH = """select * from pgr_dijkstra('select gid as id, source, target, cost from ways', %(node_from)s, %(node_to)s, directed := FALSE);"""
+SQL_PATH = """select * from pgr_dijkstra(
+            'select gid as id, source, target, cost from ways',
+            %(node_from)s,
+            %(node_to)s,
+            directed := FALSE
+            );"""
+
 @api_view(["GET", "POST"])
 @permission_classes((AllowAny,))
 def ListWays(request):
@@ -147,13 +155,12 @@ def ListWays(request):
             cursor.execute("""select * from pgr_dijkstra(
             'select gid as id, source, target, cost from ways',
             1,
-            346,
+            5,
             directed := FALSE
             );""")
             row = cursor.fetchall()
         # query = Dijkstra.objects.filter(seq__in=row)
         serializer = DijkstraSerializer(row, many=True)
-        print("QUERY: ", serializer.data)
         return Response(serializer.data)
 
     if request.method == 'POST':
@@ -161,13 +168,14 @@ def ListWays(request):
         if vertexSerializer.is_valid():
             conn = connections['default']
             conn.ensure_connection()
+
+            params = {
+                'node_from': str(request.data['node_from']),
+                'node_to': str(request.data['node_to'])
+            }
+
             with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-                cursor.execute("""select * from pgr_dijkstra(
-                        'select gid as id, source, target, cost from ways',
-                        {nodeFrom},
-                        {nodeTo},
-                        directed := FALSE
-                        );""".format(nodeFrom=request.data["node_from"], nodeTo=request.data["node_to"]))
+                cursor.execute(SQL_PATH, params)
                 row = cursor.fetchall()
             # query = Dijkstra.objects.filter(seq__in=row)
             serializer = DijkstraSerializer(row, many=True)
