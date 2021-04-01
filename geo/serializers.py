@@ -1,4 +1,9 @@
+import json
+
+import psycopg2
 from django.contrib.auth.models import User, Group
+from django.contrib.gis.geos import GEOSGeometry, Point
+from django.db import connections
 from rest_framework import serializers
 
 from geo.models import *
@@ -49,11 +54,50 @@ class DijkstraSerializer(serializers.Serializer):
     edge = serializers.IntegerField()
     cost = serializers.FloatField()
     agg_cost = serializers.FloatField()
+    geom = serializers.SerializerMethodField()
+
+    def get_geom(self, obj):
+        try:
+            geom = WaysVerticesPgr.objects.get(id=obj['node']).the_geom
+        except Exception:
+            return None
+        return str(geom)
 
 
 class VertexSerializer(serializers.Serializer):
-    node_from = serializers.IntegerField()
-    node_to = serializers.IntegerField()
+    point_from_x = serializers.FloatField()
+    point_from_y = serializers.FloatField()
+    point_to_x = serializers.FloatField()
+    point_to_y = serializers.FloatField()
+    barrier = serializers.JSONField(required=False)
+    closest_source = serializers.SerializerMethodField(required=False)
+    closest_destination = serializers.SerializerMethodField(required=False)
+
+    def get_closest_source(self, obj):
+        point = Point(obj['point_from_x'], obj['point_from_y'], srid=4326)
+        conn = connections['default']
+        conn.ensure_connection()
+        with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            cursor.execute("""SELECT streets.id AS node, streets.the_geom AS geometry, 
+        ST_DISTANCE(streets.the_geom, '{point}'::geometry) AS distance
+        FROM ways_vertices_pgr streets
+        ORDER BY distance ASC
+        LIMIT 1;""".format(point=point))
+            row = cursor.fetchall()
+        return row[0]
+
+    def get_closest_destination(self, obj):
+        point = Point(obj['point_to_x'], obj['point_to_y'], srid=4326)
+        conn = connections['default']
+        conn.ensure_connection()
+        with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            cursor.execute("""SELECT streets.id AS node, streets.the_geom AS geometry, 
+        ST_DISTANCE(streets.the_geom, '{point}'::geometry) AS distance
+        FROM ways_vertices_pgr streets
+        ORDER BY distance ASC
+        LIMIT 1;""".format(point=point))
+            row = cursor.fetchall()
+        return row[0]
 
 
 class LayerSerializer(serializers.ModelSerializer):
