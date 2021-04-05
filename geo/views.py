@@ -137,44 +137,73 @@ class DeleteHeatmap(generics.DestroyAPIView):
     serializer_class = HeatmapSerializer
 
 
-# @api_view(["GET", "POST"])
+# @api_view(["POST"])
+# @permission_classes((AllowAny,))
+# def ListWays(request):
+#     vertexSerializer = VertexSerializer(data=request.data)
+#     if vertexSerializer.is_valid():
+#         return Response(vertexSerializer.data)
+#         conn = connections['default']
+#         conn.ensure_connection()
+#         with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+#             cursor.execute("""select * from pgr_dijkstra(
+#         'select gid as id, source, target, cost from ways',
+#         {node_from},
+#         {node_to},
+#         directed := FALSE
+#         );""".format(node_from=vertexSerializer.data['closest_source']['node'],
+#                      node_to=vertexSerializer.data['closest_destination']['node']))
+#             row = cursor.fetchall()
+#         # query = Dijkstra.objects.filter(seq__in=row)
+#         serializer = DijkstraSerializer(row, many=True)
+#         print("QUERY: ", serializer.data)
+#         return Response(serializer.data)
+
+
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def ListWays(request):
-    # if request.method == 'GET':
-    #     conn = connections['default']
-    #     conn.ensure_connection()
-    #     with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-    #         cursor.execute("""select * from pgr_dijkstra(
-    #         'select gid as id, source, target, cost from ways',
-    #         1,
-    #         5,
-    #         directed := FALSE
-    #         );""")
-    #         row = cursor.fetchall()
-    #     # query = Dijkstra.objects.filter(seq__in=row)
-    #     serializer = DijkstraSerializer(row, many=True)
-    #     return Response(serializer.data)
-
-    # if request.method == 'POST':
     vertexSerializer = VertexSerializer(data=request.data)
+    distance = 0
     if vertexSerializer.is_valid():
+        # return Response(vertexSerializer.data)
+        distance += vertexSerializer.data['closest_source']['distance']
+        distance += vertexSerializer.data['closest_destination']['distance']
+        if vertexSerializer.data['geometry'] is not None:
+            conn = connections['default']
+            conn.ensure_connection()
+            with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+                cursor.execute("""UPDATE ways
+                                SET barrier=TRUE
+                                FROM (
+                                         SELECT streets.gid AS gid, streets.the_geom AS geometry
+                                         FROM ways streets
+                                         WHERE ST_Intersects(streets.the_geom, '{geom}'::geography) = TRUE
+                                ) t
+                                WHERE ways.gid = t.gid;""".format(geom=vertexSerializer.data['geometry']))
         conn = connections['default']
         conn.ensure_connection()
-        # print('from: ', vertexSerializer.data['closest_source']['geometry'])
-        # print('to: ', vertexSerializer.data['closest_destination']['geometry'])
         with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-            cursor.execute("""select * from pgr_dijkstra(
-        'select gid as id, source, target, cost from ways',
-        {node_from},
-        {node_to},
-        directed := FALSE
-        );""".format(node_from=vertexSerializer.data['closest_source']['node'], node_to=vertexSerializer.data['closest_destination']['node']))
+            cursor.execute("""SELECT * FROM pgr_dijkstra(
+                'select gid as id, source, target, length_m as cost from ways where ways.barrier=false',
+                {node_from},
+                {node_to},
+                directed := FALSE
+                );""".format(node_from=vertexSerializer.data['closest_source']['node'],
+                             node_to=vertexSerializer.data['closest_destination']['node']))
             row = cursor.fetchall()
-        # query = Dijkstra.objects.filter(seq__in=row)
-        serializer = DijkstraSerializer(row, many=True)
-        print("QUERY: ", serializer.data)
-        return Response(serializer.data)
+        if row:
+            distance += row[-1]['agg_cost']
+        serialized = DijkstraSerializer(row, many=True)
+        result = {'total_distance': distance, 'source_point': vertexSerializer.data['source_point'],
+                  'destination_point': vertexSerializer.data['destination_point'], 'path': serialized.data}
+
+        with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            cursor.execute("""UPDATE ways
+                SET barrier = FALSE
+                WHERE barrier = TRUE;""")
+
+        return Response(result)
 
     # UPDATE ways
     # SET barrier=TRUE
@@ -194,7 +223,7 @@ def ListWays(request):
     #         directed := FALSE
     # );
 
-    
+
 class GetLayer(generics.ListAPIView):
     queryset = Layer.objects.all()
     serializer_class = LayerSerializer
@@ -303,6 +332,8 @@ def showNearest(request):
 
 
 from geo.visibility_zones import get_visibility
+
+
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def get_visibility_zones(request):
@@ -340,5 +371,3 @@ def get_visibility_zones(request):
             fs.delete(file.name)
         return Response()
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
-
-

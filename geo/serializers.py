@@ -65,39 +65,60 @@ class DijkstraSerializer(serializers.Serializer):
 
 
 class VertexSerializer(serializers.Serializer):
-    point_from_x = serializers.FloatField()
-    point_from_y = serializers.FloatField()
-    point_to_x = serializers.FloatField()
-    point_to_y = serializers.FloatField()
-    barrier = serializers.JSONField(required=False)
+    source_point = serializers.CharField()      # follow this format: 'SRID=4326;POINT(-43.23456 72.4567772)'
+    destination_point = serializers.CharField()
+    barrier = serializers.CharField(required=False)
     closest_source = serializers.SerializerMethodField(required=False)
     closest_destination = serializers.SerializerMethodField(required=False)
+    geometry = serializers.SerializerMethodField(required=False)
 
     def get_closest_source(self, obj):
-        point = Point(obj['point_from_x'], obj['point_from_y'], srid=4326)
+        # point = Point(obj['point_from_x'], obj['point_from_y'], srid=4326)
+        try:
+            point = GEOSGeometry(obj['source_point'])
+        except ValueError:
+            print('invalid geometry input in source_point')
+            return None
         conn = connections['default']
         conn.ensure_connection()
         with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
             cursor.execute("""SELECT streets.id AS node, streets.the_geom AS geometry, 
-        ST_DISTANCE(streets.the_geom, '{point}'::geometry) AS distance
+        ST_DISTANCE(streets.the_geom, '{point}'::geography) AS distance
         FROM ways_vertices_pgr streets
         ORDER BY distance ASC
         LIMIT 1;""".format(point=point))
             row = cursor.fetchall()
+            print(row)
         return row[0]
 
     def get_closest_destination(self, obj):
-        point = Point(obj['point_to_x'], obj['point_to_y'], srid=4326)
+        # point = Point(obj['point_to_x'], obj['point_to_y'], srid=4326)
+        try:
+            point = GEOSGeometry(obj['destination_point'])
+        except ValueError:
+            print('invalid geometry input in destination_point')
+            return None
         conn = connections['default']
         conn.ensure_connection()
         with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
             cursor.execute("""SELECT streets.id AS node, streets.the_geom AS geometry, 
-        ST_DISTANCE(streets.the_geom, '{point}'::geometry) AS distance
+        ST_DISTANCE(streets.the_geom, '{point}'::geography) AS distance
         FROM ways_vertices_pgr streets
         ORDER BY distance ASC
         LIMIT 1;""".format(point=point))
             row = cursor.fetchall()
+            print(row)
         return row[0]
+
+    def get_geometry(self, obj):
+        try:
+            geom = GEOSGeometry(obj['barrier'])
+        except KeyError:
+            return None
+        except ValueError:
+            print('invalid geometry input in barrier')
+            return None
+        return str(geom)
 
 
 class LayerSerializer(serializers.ModelSerializer):
