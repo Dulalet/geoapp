@@ -59,64 +59,73 @@ def get_visibility(filepath, second_filepath=None):
     geoms: gpd.GeoSeries = vectorize(filtered_mask, work_folder['vectorized.geojson'], original_ds)
 
     # ----------------------------------------------------------
+    if second_filepath is not None:
+        work_folder2 = Folder(second_filepath)
+        original_path2 = work_folder2[second_filepath]
+        logger.info("original_path: %s", original_path2)
+        original_ds2 = DataSet(original_path2)
 
-    work_folder2 = Folder(second_filepath)
-    original_path2 = work_folder2[second_filepath]
-    logger.info("original_path: %s", original_path2)
-    original_ds2 = DataSet(original_path2)
-
-    orig_array2 = np.where(original_ds2.array == -9999, np.nan, original_ds2.array)
-    orig_array2 = np.where(np.isnan(orig_array2), np.nanmin(orig_array2), orig_array2)
-    filtered_array2 = gaussian_filter(orig_array2, sigma=1)
-    otsu_threshold2 = threshold_otsu(filtered_array2)
-    mask2 = filtered_array2 > otsu_threshold2
-    eroded_mask2 = binary_erosion(mask2, iterations=5)
-    filtered_mask2: np.ndarray = binary_dilation(eroded_mask2, iterations=5).astype(int)
-    # geoms2: gpd.GeoSeries = vectorize(orig_array2>250, work_folder2['vectorized2.geojson'], original_ds2)
-    geoms2: gpd.GeoSeries = vectorize(filtered_mask2, work_folder2['vectorized2.geojson'], original_ds2)
+        orig_array2 = np.where(original_ds2.array == -9999, np.nan, original_ds2.array)
+        orig_array2 = np.where(np.isnan(orig_array2), np.nanmin(orig_array2), orig_array2)
+        filtered_array2 = gaussian_filter(orig_array2, sigma=1)
+        otsu_threshold2 = threshold_otsu(filtered_array2)
+        mask2 = filtered_array2 > otsu_threshold2
+        eroded_mask2 = binary_erosion(mask2, iterations=5)
+        filtered_mask2: np.ndarray = binary_dilation(eroded_mask2, iterations=5).astype(int)
+        # geoms2: gpd.GeoSeries = vectorize(orig_array2>250, work_folder2['vectorized2.geojson'], original_ds2)
+        geoms2: gpd.GeoSeries = vectorize(filtered_mask2, work_folder2['vectorized2.geojson'], original_ds2)
 
     # --------------------------------------------------------------
+        path = Path(filepath)
+        cmd = f"""cd {path}
+            gdal_merge.py -init "0 0" -o merged.tif out1.tiff out2.tiff
+            gdal_calc.py -A merged.tif --outfile=whitemerged.tif --calc="A * 0" --type=Int32
+            gdal_merge.py -init "0 255" -o merged1.tif whitemerged.tif out1.tiff
+            gdal_merge.py -init "0 255" -o merged2.tif whitemerged.tif out2.tiff
+            gdal_calc.py -A merged1.tif -B merged2.tif --outfile=final.tif --calc="A + B" --type=Int32
+            rm merged.tif whitemerged.tif merged1.tif merged2.tif""".format(path=path.parent)
 
-    work_folder3 = Folder('/home/daulet/Desktop/zones/final.tif')
-    original_path3 = work_folder3['/home/daulet/Desktop/zones/final.tif']
-    logger.info("original_path: %s", original_path3)
-    original_ds3 = DataSet(original_path3)
-    # plt.imshow(original_ds3.array)
-    # plt.show()
-    # return
+        # work_folder3 = Folder('/home/daulet/Desktop/zones/final.tif')
+        # original_path3 = work_folder3['/home/daulet/Desktop/zones/final.tif']
+        work_folder3 = Folder(str(path.parent) + '/final.tif')
+        original_path3 = work_folder3[str(path.parent) + '/final.tif']
+        logger.info("original_path: %s", original_path3)
+        original_ds3 = DataSet(original_path3)
+        # plt.imshow(original_ds3.array)
+        # plt.show()
+        # return
 
-    orig_array3 = np.where(original_ds3.array > 500, original_ds3.array, 0)
-    # orig_array3 = np.where(original_ds3.array == -9999, np.nan, original_ds3.array)
-    orig_array3 = np.where(np.isnan(orig_array3), np.nanmin(orig_array3), orig_array3)
-    # orig_array3 = np.where(orig_array3 == 455, orig_array3, np.nanmin(orig_array3))
-    # filtered_mask3 = np.where(filtered_mask3 == 455, filtered_mask3, np.nanmin(filtered_mask3))
-    filtered_array3 = gaussian_filter(orig_array3, sigma=1)
-    # plt.show()
-    # return
-    otsu_threshold3 = threshold_otsu(filtered_array3)
-    mask3 = filtered_array3 > otsu_threshold3
-    eroded_mask3 = binary_erosion(mask3, iterations=1)
-    filtered_mask3: np.ndarray = binary_dilation(eroded_mask3, iterations=1).astype(int)
-    # geoms3: gpd.GeoSeries = vectorize(orig_array3>500, work_folder3['vectorized3.geojson'], original_ds3)
-    geoms3: gpd.GeoSeries = vectorize(filtered_mask3, work_folder3['vectorized3.geojson'], original_ds3)
+        orig_array3 = np.where(original_ds3.array > 500, original_ds3.array, 0)
+        orig_array3 = np.where(np.isnan(orig_array3), np.nanmin(orig_array3), orig_array3)
+        filtered_array3 = gaussian_filter(orig_array3, sigma=1)
+        # plt.show()
+        # return
+        otsu_threshold3 = threshold_otsu(filtered_array3)
+        mask3 = filtered_array3 > otsu_threshold3
+        eroded_mask3 = binary_erosion(mask3, iterations=1)
+        filtered_mask3: np.ndarray = binary_dilation(eroded_mask3, iterations=1).astype(int)
+        # geoms3: gpd.GeoSeries = vectorize(orig_array3>500, work_folder3['vectorized3.geojson'], original_ds3)
+        geoms3: gpd.GeoSeries = vectorize(filtered_mask3, work_folder3['vectorized3.geojson'], original_ds3)
 
+        return geoms, geoms2, geoms3
+    return geoms
     # ----------visualize and check:---------------------------
-    print('!!!!!!!!!', geoms)
-    print('!!!!!!!!!', geoms2)
-    print('!!!!!!!!!', geoms3)
-    for geom in geoms3:
-        plt.plot(*geom.exterior.xy, c='g', lw=3)
-    for geom in geoms2:
-        plt.plot(*geom.exterior.xy, c='r', alpha=0.2)
-    for geom in geoms:
-        plt.plot(*geom.exterior.xy, c='b', alpha=0.2)
-    plt.show()
-
-    plotter = Plotter()
-    # plotter.add_images(mask, eroded_mask, dilated_mask)
-    plotter.add_images(mask, mask2, mask3, filtered_mask, filtered_mask2, filtered_mask3)
-    plotter.plot(lbrtwh=(1e-3, 1e-3, 1 - 1e-3, 1 - 1e-3, 1e-3, 0)).show()
-    return
+    # print('!!!!!!!!!', geoms)
+    # print('!!!!!!!!!', geoms2)
+    # print('!!!!!!!!!', geoms3)
+    # for geom in geoms3:
+    #     plt.plot(*geom.exterior.xy, c='g', lw=3)
+    # for geom in geoms2:
+    #     plt.plot(*geom.exterior.xy, c='r', alpha=0.2)
+    # for geom in geoms:
+    #     plt.plot(*geom.exterior.xy, c='b', alpha=0.2)
+    # plt.show()
+    #
+    # plotter = Plotter()
+    # # plotter.add_images(mask, eroded_mask, dilated_mask)
+    # plotter.add_images(mask, mask2, mask3, filtered_mask, filtered_mask2, filtered_mask3)
+    # plotter.plot(lbrtwh=(1e-3, 1e-3, 1 - 1e-3, 1 - 1e-3, 1e-3, 0)).show()
+    # return
     # ----------------------------------------------------------
 
     # gdal_merge.py -init "0 0" -o merged.tif out1.tiff out2.tiff

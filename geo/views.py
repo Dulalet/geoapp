@@ -317,15 +317,28 @@ def get_visibility_zones(request):
         cmd = f"gdal_viewshed -md {observer_radius} -ox {observer_x} -oy {observer_y} -oz {observer_height} {uploaded_file_url} {path.parent}/out1.tiff"
         file_path = str(path.parent) + '/out1.tiff'
         os.system(cmd)
+        result = {}
         if second_observer_x and second_observer_y and second_file:
-            cmd = f"gdal_viewshed -md {second_observer_radius} -ox {second_observer_x} -oy {second_observer_y} -oz {second_observer_height} -vv 200 {uploaded_file_url} {path.parent}/out2.tiff"
+            cmd = f"gdal_viewshed -md {second_observer_radius} -ox {second_observer_x} -oy {second_observer_y} -oz {second_observer_height} -vv 200 {uploaded_file_url} {path.parent}/out2.tiff "
             os.system(cmd)
             second_file_path = str(path.parent) + '/out2.tiff'
-            result = get_visibility(file_path, second_file_path)
-            fs.delete(file.name)
-            fs.delete(second_file.name)
+            try:
+                vis_first, vis_second, vis_both = get_visibility(file_path, second_file_path)
+            except Exception as e:
+                print(e)
+            finally:
+                fs.delete(file.name)
+                fs.delete(second_file.name)
+                result['vis_zone_first'] = str(vis_first)
+                result['vis_zone_second'] = str(vis_second)
+                result['vis_zone_mutual'] = str(vis_both)
         else:
-            result = get_visibility(file_path)
-            fs.delete(file.name)
-        return Response()
+            try:
+                vis = get_visibility(file_path)
+            except Exception as e:
+                print(e)
+            finally:
+                fs.delete(file.name)
+                result['vis_zone'] = str(vis)
+        return Response(result)
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
