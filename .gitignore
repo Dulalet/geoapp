@@ -1,3 +1,4 @@
+geoapp/settings.py
 Dockerfile
 docker-compose.yaml
 .env
