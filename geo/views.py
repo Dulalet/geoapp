@@ -137,36 +137,12 @@ class DeleteHeatmap(generics.DestroyAPIView):
     serializer_class = HeatmapSerializer
 
 
-# @api_view(["POST"])
-# @permission_classes((AllowAny,))
-# def ListWays(request):
-#     vertexSerializer = VertexSerializer(data=request.data)
-#     if vertexSerializer.is_valid():
-#         return Response(vertexSerializer.data)
-#         conn = connections['default']
-#         conn.ensure_connection()
-#         with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-#             cursor.execute("""select * from pgr_dijkstra(
-#         'select gid as id, source, target, cost from ways',
-#         {node_from},
-#         {node_to},
-#         directed := FALSE
-#         );""".format(node_from=vertexSerializer.data['closest_source']['node'],
-#                      node_to=vertexSerializer.data['closest_destination']['node']))
-#             row = cursor.fetchall()
-#         # query = Dijkstra.objects.filter(seq__in=row)
-#         serializer = DijkstraSerializer(row, many=True)
-#         print("QUERY: ", serializer.data)
-#         return Response(serializer.data)
-
-
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def ListWays(request):
     vertexSerializer = VertexSerializer(data=request.data)
     distance = 0
     if vertexSerializer.is_valid():
-        # return Response(vertexSerializer.data)
         distance += vertexSerializer.data['closest_source']['distance']
         distance += vertexSerializer.data['closest_destination']['distance']
         if vertexSerializer.data['geometry'] is not None:
@@ -204,24 +180,6 @@ def ListWays(request):
                 WHERE barrier = TRUE;""")
 
         return Response(result)
-
-    # UPDATE ways
-    # SET barrier=TRUE
-    # FROM (
-    #          SELECT streets.gid AS gid, streets.the_geom AS geometry
-    #          FROM ways streets
-    #          WHERE ST_Intersects(streets.the_geom, 'SRID=4326;POINT(71.4691279 51.1247586)'::geometry) = TRUE
-    # ) t
-    # WHERE ways.gid = t.gid;
-    #
-    # -----------------------------------------------------
-    #
-    # select * from pgr_dijkstra(
-    #         'select gid as id, source, target, cost from ways where ways.barrier=false',
-    #         1,
-    #         7,
-    #         directed := FALSE
-    # );
 
 
 class GetLayer(generics.ListAPIView):
