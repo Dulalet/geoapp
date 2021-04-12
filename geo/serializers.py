@@ -161,7 +161,7 @@ class VisibilityZonesSerializer(serializers.Serializer):
     second_observer_y = serializers.FloatField(default=None)
     second_observer_radius = serializers.IntegerField(default=150)
     second_observer_height = serializers.IntegerField(default=10)
-    second_file = serializers.FileField(default=None)
+    # second_file = serializers.FileField(default=None)
 
 
 class CountObjectSerializer(serializers.Serializer):

@@ -306,7 +306,7 @@ def get_visibility_zones(request):
         second_observer_y = serialized.validated_data['second_observer_y']
         second_observer_radius = serialized.validated_data['second_observer_radius']
         second_observer_height = serialized.validated_data['second_observer_height']
-        second_file = serialized.validated_data['second_file']
+        # second_file = serialized.validated_data['second_file']
 
         media = os.getcwd()
         fs = FileSystemStorage(location=media + '/visibility_files')
@@ -318,7 +318,8 @@ def get_visibility_zones(request):
         file_path = str(path.parent) + '/out1.tiff'
         os.system(cmd)
         result = {}
-        if second_observer_x and second_observer_y and second_file:
+        if second_observer_x and second_observer_y:
+            print('test')
             cmd = f"gdal_viewshed -md {second_observer_radius} -ox {second_observer_x} -oy {second_observer_y} -oz {second_observer_height} -vv 200 {uploaded_file_url} {path.parent}/out2.tiff "
             os.system(cmd)
             second_file_path = str(path.parent) + '/out2.tiff'
@@ -328,7 +329,7 @@ def get_visibility_zones(request):
                 print(e)
             finally:
                 fs.delete(file.name)
-                fs.delete(second_file.name)
+                # fs.delete(second_file.name)
                 result['vis_zone_first'] = str(vis_first)
                 result['vis_zone_second'] = str(vis_second)
                 result['vis_zone_mutual'] = str(vis_both)
