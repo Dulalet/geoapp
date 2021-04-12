@@ -9,3 +9,4 @@ geo/__pycache__/
 geoapp/__pycache__/
 visibility_files/
 layer_files/
+.idea
