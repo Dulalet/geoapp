@@ -3,40 +3,24 @@ import os
 import tempfile
 import zipfile
 from pathlib import Path
-from random import random
+from random import random, randint
 
 import geopandas as gpd
+import geopandas.geodataframe
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from shapely.geometry import Point
 
+from geo.importshp import normalize_gdf
 
-def buffer_generate(pointX, pointY, radius, filepath):
+RANDOM_POINTS = 3
+
+def buffer_generate(pointX, pointY, radius, objectsGDF, from_file):
     # streetsGDF = gpd.read_file('//home/daulet/Desktop/WGS2/geojson/Улицы_Project.shp.geojson')
     # inputPoint = Point(7959830.520, 6643715.849)
-    path = Path(filepath)
-    name_of_file = ntpath.split(filepath)[1]
-    extension = os.path.splitext(filepath)[1]
-    if extension == '.zip':
-        temp_dir = tempfile.TemporaryDirectory(dir=path.parent)
-        print(temp_dir.name)
-        with zipfile.ZipFile(filepath, 'r') as zip_ref:
-            zip_ref.extractall(temp_dir.name)
-
-        objectsGDF = gpd.read_file(temp_dir.name + '/' + name_of_file[:-4] + '.shp')  # import shp to a dataframe
-        temp_dir.cleanup()
-    elif extension == '.kml':
-        gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
-        objectsGDF = gpd.read_file(filepath, driver='KML')
-    elif extension == '.csv':
-        objectsGDF = gpd.read_file(filepath)
-        objectsGDF.crs = 'epsg:3857'
-    elif extension == '.geojson':
-        objectsGDF = gpd.read_file(filepath)
-    else:
-        return Response('Error: cant read file', HTTP_400_BAD_REQUEST)
-
     inputPoint = Point(pointX, pointY)
+    if from_file is False:
+        objectsGDF = normalize_gdf(objectsGDF)
     intersectionGeoSeries = objectsGDF.intersection(inputPoint.buffer(radius))
     for i in range(len(intersectionGeoSeries)):
         if intersectionGeoSeries[i].is_empty:
@@ -48,8 +32,11 @@ def buffer_generate(pointX, pointY, radius, filepath):
 
     geomList = intersectionsGDF.geometry.to_list()
     randomPoints = []
-    for i in range(3):
-        randomPoints.append(geomList[i].interpolate(random(), True))
+    if len(geomList) == 0:
+        return randomPoints
+    for i in range(RANDOM_POINTS):
+        randNum = randint(0, len(geomList)-1)
+        randomPoints.append(geomList[randNum].interpolate(random(), True))
         randomPoints[i] = randomPoints[i].to_wkt()
 
     # plot random points:

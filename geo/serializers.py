@@ -24,7 +24,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class BuildingSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Building
-        fields = ['ogc_fid', 'id', 'floor', 'status', 'data_in', 'function', 'id_style1', 'build_area',
+        fields = ['uuid', 'ogc_fid', 'id', 'floor', 'status', 'data_in', 'function', 'id_style1', 'build_area',
                   'use_area', 'number_apa', 'population', 'seats', 'seats_cars', 'shape_leng', 'shape_le_1',
                   'shape_area', 'wkb_geometry']
 
@@ -32,19 +32,19 @@ class BuildingSerializer(serializers.HyperlinkedModelSerializer):
 class BusStopSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BusStop
-        fields = ['ogc_fid', 'stationnam', 'platformx', 'platformy', 'wkb_geometry']
+        fields = ['uuid', 'ogc_fid', 'stationnam', 'platformx', 'platformy', 'wkb_geometry']
 
 
 class RedLineSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = RedLine
-        fields = ['ogc_fid', 'id_style', 'id_style1', 'shape_leng', 'shape_le_1', 'wkb_geometry']
+        fields = ['uuid', 'ogc_fid', 'id_style', 'id_style1', 'shape_leng', 'shape_le_1', 'wkb_geometry']
 
 
 class StreetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Street
-        fields = ['ogc_fid', 'id', 'name', 'type', 'old_type', 'abreviatur', 'shape_leng', 'shape_le_1', 'wkb_geometry']
+        fields = ['uuid', 'ogc_fid', 'id', 'name', 'type', 'old_type', 'abreviatur', 'shape_leng', 'shape_le_1', 'wkb_geometry']
 
 
 class DijkstraSerializer(serializers.Serializer):
@@ -147,8 +147,17 @@ class HeatmapSerializer(serializers.ModelSerializer):
 class PointRadiusSerializer(serializers.Serializer):
     pointX = serializers.FloatField()
     pointY = serializers.FloatField()
-    radius = serializers.IntegerField()
-    file = serializers.FileField()
+    radius = serializers.FloatField()
+    file = serializers.FileField(required=False)
+    from_file = serializers.BooleanField(required=False)
+    id = serializers.IntegerField(required=False)
+
+
+class BufferZoneSerializer(serializers.Serializer):
+    radius = serializers.FloatField(required=False, default=0.01)
+    file = serializers.FileField(required=False)
+    from_file = serializers.BooleanField()
+    id = serializers.IntegerField(required=False)
 
 
 class VisibilityZonesSerializer(serializers.Serializer):

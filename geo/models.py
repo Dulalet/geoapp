@@ -1,10 +1,14 @@
+import uuid as uuid
+
+import django.contrib.auth.models
 from django.contrib.gis.db import models
 # from django.contrib.postgres.fields import JSONField
 from django.db.models import JSONField
 
 
 class Building(models.Model):
-    ogc_fid = models.AutoField(primary_key=True)
+    ogc_fid = models.IntegerField(blank=True, null=True)
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     id = models.IntegerField(blank=True, null=True)
     floor = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=100, blank=True, null=True)
@@ -28,7 +32,8 @@ class Building(models.Model):
 
 
 class BusStop(models.Model):
-    ogc_fid = models.AutoField(primary_key=True)
+    ogc_fid = models.IntegerField(blank=True, null=True)
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     stationnam = models.CharField(max_length=100, blank=True, null=True)
     platformx = models.CharField(max_length=100, blank=True, null=True)
     platformy = models.CharField(max_length=100, blank=True, null=True)
@@ -40,7 +45,8 @@ class BusStop(models.Model):
 
 
 class RedLine(models.Model):
-    ogc_fid = models.AutoField(primary_key=True)
+    ogc_fid = models.IntegerField(blank=True, null=True)
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     id_style = models.CharField(max_length=100, blank=True, null=True)
     id_style1 = models.IntegerField(blank=True, null=True)
     shape_leng = models.FloatField(blank=True, null=True)
@@ -53,7 +59,8 @@ class RedLine(models.Model):
 
 
 class Street(models.Model):
-    ogc_fid = models.AutoField(primary_key=True)
+    ogc_fid = models.IntegerField(blank=True, null=True)
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     id = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=100, blank=True, null=True)
     type = models.CharField(max_length=100, blank=True, null=True)
@@ -91,10 +98,14 @@ class Way(models.Model):
     length = models.FloatField(blank=True, null=True)
     length_m = models.FloatField(blank=True, null=True)
     name = models.TextField(blank=True, null=True)
-    source = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='sources', db_column='source', blank=True, null=True)
-    target = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='targets', db_column='target', blank=True, null=True)
-    source_osm = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='sources_osm', db_column='source_osm', blank=True, null=True)
-    target_osm = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='targets_osm', db_column='target_osm', blank=True, null=True)
+    source = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='sources', db_column='source',
+                               blank=True, null=True)
+    target = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='targets', db_column='target',
+                               blank=True, null=True)
+    source_osm = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='sources_osm',
+                                   db_column='source_osm', blank=True, null=True)
+    target_osm = models.ForeignKey('WaysVerticesPgr', models.DO_NOTHING, related_name='targets_osm',
+                                   db_column='target_osm', blank=True, null=True)
     cost = models.FloatField(blank=True, null=True)
     reverse_cost = models.FloatField(blank=True, null=True)
     cost_s = models.FloatField(blank=True, null=True)
@@ -120,22 +131,40 @@ class Way(models.Model):
 
 
 class Layer(models.Model):
-    name = models.CharField(max_length=25)
-    slug = models.CharField(max_length=25)
-    url = models.CharField(max_length=50)
-    type = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
+    slug = models.CharField(max_length=50)
+    url = models.CharField(max_length=100)
+    type = models.CharField(max_length=40)
     color = models.CharField(max_length=25, default='[255, 255, 255, 0.5]')
     tag = models.CharField(max_length=25, null=True)
+    user = models.ForeignKey(django.contrib.auth.models.User, on_delete=models.CASCADE)
+    is_general = models.BooleanField(default=False)
     data = JSONField()
     geom = models.GeometryCollectionField(max_length=1000, srid=3857, dim=3)
 
+    class Meta:
+        managed = True
+        db_table = 'geo_layer'
+
     def __str__(self):
         return self.name
+
+    # def save(self, *args, **kwargs):
+    #     if not self.user:
+    #         self.user = self.get_user()
+    #     return super(Layer, self).save(*args, **kwargs)
+    #
+    # def get_user(self):
+    #     return request.User
 
 
 class LayerFile(models.Model):
     name = models.CharField(max_length=25)
     file = models.FileField(upload_to='layer_files', editable=True)
+
+    class Meta:
+        managed = False
+        db_table = 'geo_layerfile'
 
     def __str__(self):
         return self.name

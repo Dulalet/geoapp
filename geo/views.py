@@ -8,12 +8,12 @@ from django.db import connections
 from django.http import HttpResponse
 from rest_framework import viewsets, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from geo.buffer import buffer_generate
-from geo.importshp import importLayer
+from geo.importshp import importLayer, gdf2layer, import_from_db, normalize_gdf
 from geo.nearestObjects import nearestPoints
 from geo.objectsInPolygon import numObjects
 from geo.serializers import *
@@ -136,6 +136,27 @@ class DeleteHeatmap(generics.DestroyAPIView):
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
+@api_view(["GET", "UPDATE"])
+@permission_classes((IsAuthenticated,))
+def get_layer(request):
+    if request.user.is_superuser:
+        queryset = Layer.objects.all()
+        # print(queryset)
+    else:
+        from django.db.models import Q
+        queryset = Layer.objects.filter(Q(is_general=True) | Q(user=request.user.id))
+        print('lol', queryset)
+    print(queryset)
+    return Response(LayerSerializer(queryset, many=True).data)
+# class GetLayer(generics.ListAPIView):
+#     queryset = Layer.objects.all()
+#     serializer_class = LayerSerializer
+
+
+# class UpdateLayer(generics.RetrieveUpdateAPIView):
+#     queryset = Layer.objects.all()
+#     serializer_class = LayerSerializer
+
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -182,18 +203,8 @@ def ListWays(request):
         return Response(result)
 
 
-class GetLayer(generics.ListAPIView):
-    queryset = Layer.objects.all()
-    serializer_class = LayerSerializer
-
-
-class UpdateLayer(generics.RetrieveUpdateAPIView):
-    queryset = Layer.objects.all()
-    serializer_class = LayerSerializer
-
-
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+@permission_classes((IsAuthenticated,))
 def addLayer(request):
     serialized = UploadGeometrySerializer(data=request.data)
     if serialized.is_valid():
@@ -206,7 +217,7 @@ def addLayer(request):
         serialized.validated_data.pop('file')
         serialized.save()
         try:
-            layer = importLayer(name=name, filepath=uploaded_file_url)
+            layer = gdf2layer(name=name, filepath=uploaded_file_url, user=request.user)
             serialized_layer = LayerSerializer(layer)
         except ImportError:
             return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
@@ -224,18 +235,27 @@ def countObjects(request):
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
         radius = serialized.validated_data['radius']
-        media = os.getcwd()
-        fs = FileSystemStorage(location=media + '/layer_files')
-        file = serialized.validated_data['file']
-        filename = fs.save(file.name, file)
-        uploaded_file_url = fs.path(filename)
-        serialized.validated_data.pop('file')
-        try:
-            objectsNum, objects = numObjects(pointX, pointY, radius, uploaded_file_url)
-        except ImportError:
-            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
-        finally:
-            fs.delete(file.name)
+        if serialized.validated_data['from_file']:
+            media = os.getcwd()
+            fs = FileSystemStorage(location=media + '/layer_files')
+            file = serialized.validated_data['file']
+            filename = fs.save(file.name, file)
+            uploaded_file_url = fs.path(filename)
+            serialized.validated_data.pop('file')
+            try:
+                gdf = importLayer(uploaded_file_url)
+                objectsNum, objects = numObjects(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+            except ImportError:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+            finally:
+                fs.delete(file.name)
+        else:
+            try:
+                gdf = import_from_db(serialized.validated_data['id'])
+                objectsNum, objects = numObjects(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+            except:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+
         return Response({'number of objects': str(objectsNum), 'objects': objects})
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
@@ -248,18 +268,26 @@ def buffer(request):
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
         radius = serialized.validated_data['radius']
-        media = os.getcwd()
-        fs = FileSystemStorage(location=media + '/layer_files')
-        file = serialized.validated_data['file']
-        filename = fs.save(file.name, file)
-        uploaded_file_url = fs.path(filename)
-        serialized.validated_data.pop('file')
-        try:
-            kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, uploaded_file_url)
-        except ImportError:
-            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
-        finally:
-            fs.delete(file.name)
+        if serialized.validated_data['from_file']:
+            media = os.getcwd()
+            fs = FileSystemStorage(location=media + '/layer_files')
+            file = serialized.validated_data['file']
+            filename = fs.save(file.name, file)
+            uploaded_file_url = fs.path(filename)
+            serialized.validated_data.pop('file')
+            try:
+                gdf = importLayer(uploaded_file_url)
+                kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+            except ImportError:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+            finally:
+                fs.delete(file.name)
+        else:
+            try:
+                gdf = import_from_db(serialized.validated_data['id'])
+                kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+            except:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
         return Response({'KPP': kpp_points.to_json(),
                          'Random Points': randomPoints})
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
@@ -273,19 +301,56 @@ def showNearest(request):
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
         radius = serialized.validated_data['radius']
-        media = os.getcwd()
-        fs = FileSystemStorage(location=media + '/layer_files')
-        file = serialized.validated_data['file']
-        filename = fs.save(file.name, file)
-        uploaded_file_url = fs.path(filename)
-        serialized.validated_data.pop('file')
-        try:
-            pointsDict = nearestPoints(pointX, pointY, radius, uploaded_file_url)
-        except ImportError:
-            return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
-        finally:
-            fs.delete(file.name)
+        if serialized.validated_data['from_file']:
+            media = os.getcwd()
+            fs = FileSystemStorage(location=media + '/layer_files')
+            file = serialized.validated_data['file']
+            filename = fs.save(file.name, file)
+            uploaded_file_url = fs.path(filename)
+            serialized.validated_data.pop('file')
+            try:
+                gdf = importLayer(uploaded_file_url)
+                pointsDict = nearestPoints(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+            except ImportError:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+            finally:
+                fs.delete(file.name)
+        else:
+            try:
+                gdf = import_from_db(serialized.validated_data['id'])
+                pointsDict = nearestPoints(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+            except:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
         return Response(json.dumps(pointsDict))
+    return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def get_buffer_zone(request):
+    serialized = BufferZoneSerializer(data=request.data)
+    if serialized.is_valid():
+        if serialized.validated_data['from_file']:
+            media = os.getcwd()
+            fs = FileSystemStorage(location=media + '/layer_files')
+            file = serialized.validated_data['file']
+            filename = fs.save(file.name, file)
+            uploaded_file_url = fs.path(filename)
+            serialized.validated_data.pop('file')
+            try:
+                gdf = importLayer(uploaded_file_url)
+                gdf = gdf.buffer(serialized.validated_data['radius'])
+            except:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+            finally:
+                fs.delete(file.name)
+        else:
+            try:
+                gdf = import_from_db(serialized.validated_data['id'])
+                gdf = normalize_gdf(gdf)
+                gdf = gdf.buffer(serialized.validated_data['radius'])
+            except:
+                return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+        return Response(gdf.geometry.to_json())
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 

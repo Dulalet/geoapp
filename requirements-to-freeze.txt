@@ -6,3 +6,4 @@ psycopg2
 lgblkb-tools
 scikit-image
 scikit-learn
+celery
