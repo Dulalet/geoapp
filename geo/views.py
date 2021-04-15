@@ -1,18 +1,16 @@
-import json
 import os
 from pathlib import Path
 
-import psycopg2
 from django.core.files.storage import FileSystemStorage
-from django.db import connections
-from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
 
 from geo.buffer import buffer_generate
+from geo.forms import *
 from geo.importshp import importLayer, gdf2layer, import_from_db, normalize_gdf
 from geo.nearestObjects import nearestPoints
 from geo.objectsInPolygon import numObjects
@@ -47,14 +45,25 @@ class ListBuilding(generics.ListAPIView):
     serializer_class = BuildingSerializer
 
 
-class UpdateBuilding(generics.RetrieveUpdateAPIView):
-    queryset = Building.objects.all()
-    serializer_class = BuildingSerializer
+@api_view(["PUT"])
+@permission_classes((AllowAny,))
+def UpdateBuilding(request):
+    obj = get_object_or_404(Building, uuid=request.data['uuid'])
+    form = BuildingForm(request.POST or None, instance=obj)
+
+    if form.is_valid():
+        form.save()
+    return Response(BuildingSerializer(obj).data)
 
 
-class DeleteBuilding(generics.DestroyAPIView):
-    queryset = Building.objects.all()
-    serializer_class = BuildingSerializer
+@api_view(["DELETE"])
+@permission_classes((AllowAny,))
+def DeleteBuilding(request):
+    obj = get_object_or_404(Building, uuid=request.data['uuid'])
+
+    if request.method == 'DELETE':
+        obj.delete()
+    return Response('deleted', HTTP_202_ACCEPTED)
 
 
 class CreateBusStop(generics.ListCreateAPIView):
@@ -67,14 +76,25 @@ class ListBusStop(generics.ListAPIView):
     serializer_class = BusStopSerializer
 
 
-class UpdateBusStop(generics.RetrieveUpdateAPIView):
-    queryset = BusStop.objects.all()
-    serializer_class = BusStopSerializer
+@api_view(["PUT"])
+@permission_classes((AllowAny,))
+def UpdateBusStop(request):
+    obj = get_object_or_404(BusStop, uuid=request.data['uuid'])
+    form = BusStopForm(request.POST or None, instance=obj)
+
+    if form.is_valid():
+        form.save()
+    return Response(BusStopSerializer(obj).data)
 
 
-class DeleteBusStop(generics.DestroyAPIView):
-    queryset = BusStop.objects.all()
-    serializer_class = BusStopSerializer
+@api_view(["DELETE"])
+@permission_classes((AllowAny,))
+def DeleteBusStop(request):
+    obj = get_object_or_404(BusStop, uuid=request.data['uuid'])
+
+    if request.method == 'DELETE':
+        obj.delete()
+    return Response('deleted', HTTP_202_ACCEPTED)
 
 
 class CreateRedLine(generics.ListCreateAPIView):
@@ -87,14 +107,25 @@ class ListRedLine(generics.ListAPIView):
     serializer_class = RedLineSerializer
 
 
-class UpdateRedLine(generics.RetrieveUpdateAPIView):
-    queryset = RedLine.objects.all()
-    serializer_class = RedLineSerializer
+@api_view(["PUT"])
+@permission_classes((AllowAny,))
+def UpdateRedLine(request):
+    obj = get_object_or_404(RedLine, uuid=request.data['uuid'])
+    form = RedLineForm(request.POST or None, instance=obj)
+
+    if form.is_valid():
+        form.save()
+    return Response(RedLineSerializer(obj).data)
 
 
-class DeleteRedLine(generics.DestroyAPIView):
-    queryset = RedLine.objects.all()
-    serializer_class = RedLineSerializer
+@api_view(["DELETE"])
+@permission_classes((AllowAny,))
+def DeleteRedLine(request):
+    obj = get_object_or_404(RedLine, uuid=request.data['uuid'])
+
+    if request.method == 'DELETE':
+        obj.delete()
+    return Response('deleted', HTTP_202_ACCEPTED)
 
 
 class CreateStreet(generics.ListCreateAPIView):
@@ -107,14 +138,25 @@ class ListStreet(generics.ListAPIView):
     serializer_class = StreetSerializer
 
 
-class UpdateStreet(generics.RetrieveUpdateAPIView):
-    queryset = Street.objects.all()
-    serializer_class = StreetSerializer
+@api_view(["PUT"])
+@permission_classes((AllowAny,))
+def UpdateStreet(request):
+    obj = get_object_or_404(Street, uuid=request.data['uuid'])
+    form = StreetForm(request.POST or None, instance=obj)
+
+    if form.is_valid():
+        form.save()
+    return Response(StreetSerializer(obj).data)
 
 
-class DeleteStreet(generics.DestroyAPIView):
-    queryset = Street.objects.all()
-    serializer_class = StreetSerializer
+@api_view(["DELETE"])
+@permission_classes((AllowAny,))
+def DeleteStreet(request):
+    obj = get_object_or_404(Street, uuid=request.data['uuid'])
+
+    if request.method == 'DELETE':
+        obj.delete()
+    return Response('deleted', HTTP_202_ACCEPTED)
 
 
 class CreateHeatmap(generics.ListCreateAPIView):
@@ -135,6 +177,7 @@ class UpdateHeatmap(generics.RetrieveUpdateAPIView):
 class DeleteHeatmap(generics.DestroyAPIView):
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
+
 
 @api_view(["GET", "UPDATE"])
 @permission_classes((IsAuthenticated,))
