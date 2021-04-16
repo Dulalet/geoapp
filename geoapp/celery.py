@@ -3,9 +3,10 @@ import os
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'geoapp.settings')
 
 app = Celery('geoapp')
+app.conf.broker_url = 'redis://localhost:6379/0'
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

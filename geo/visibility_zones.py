@@ -2,16 +2,13 @@ from functools import partial
 from pathlib import Path
 
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import numpy as np
 import shapely.affinity as shaff
 from PIL import Image
 from lgblkb_tools import logger, Folder
 from lgblkb_tools.common.utils import run_cmd
 from lgblkb_tools.gdal_datasets import DataSet
-from lgblkb_tools.visualize import Plotter
 from scipy.ndimage import gaussian_filter, binary_erosion, binary_dilation
-from shapely.strtree import STRtree
 from skimage.filters import threshold_otsu
 
 

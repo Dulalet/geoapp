@@ -7,3 +7,7 @@ lgblkb-tools
 scikit-image
 scikit-learn
 celery
+--global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==2.4.2
+psycopg2-binary~=2.8.6
+celery
+redis

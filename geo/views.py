@@ -15,6 +15,7 @@ from geo.importshp import importLayer, gdf2layer, import_from_db, normalize_gdf
 from geo.nearestObjects import nearestPoints
 from geo.objectsInPolygon import numObjects
 from geo.serializers import *
+from geoapp.tasks import remove_barriers
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -36,16 +37,19 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class CreateBuilding(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Building.objects.all()
     serializer_class = BuildingSerializer
 
 
 class ListBuilding(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Building.objects.all()
     serializer_class = BuildingSerializer
 
 
 @api_view(["PUT"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def UpdateBuilding(request):
     obj = get_object_or_404(Building, uuid=request.data['uuid'])
@@ -57,6 +61,7 @@ def UpdateBuilding(request):
 
 
 @api_view(["DELETE"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def DeleteBuilding(request):
     obj = get_object_or_404(Building, uuid=request.data['uuid'])
@@ -67,16 +72,19 @@ def DeleteBuilding(request):
 
 
 class CreateBusStop(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = BusStop.objects.all()
     serializer_class = BusStopSerializer
 
 
 class ListBusStop(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = BusStop.objects.all()
     serializer_class = BusStopSerializer
 
 
 @api_view(["PUT"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def UpdateBusStop(request):
     obj = get_object_or_404(BusStop, uuid=request.data['uuid'])
@@ -88,6 +96,7 @@ def UpdateBusStop(request):
 
 
 @api_view(["DELETE"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def DeleteBusStop(request):
     obj = get_object_or_404(BusStop, uuid=request.data['uuid'])
@@ -98,16 +107,19 @@ def DeleteBusStop(request):
 
 
 class CreateRedLine(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = RedLine.objects.all()
     serializer_class = RedLineSerializer
 
 
 class ListRedLine(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = RedLine.objects.all()
     serializer_class = RedLineSerializer
 
 
 @api_view(["PUT"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def UpdateRedLine(request):
     obj = get_object_or_404(RedLine, uuid=request.data['uuid'])
@@ -119,6 +131,7 @@ def UpdateRedLine(request):
 
 
 @api_view(["DELETE"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def DeleteRedLine(request):
     obj = get_object_or_404(RedLine, uuid=request.data['uuid'])
@@ -129,16 +142,19 @@ def DeleteRedLine(request):
 
 
 class CreateStreet(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Street.objects.all()
     serializer_class = StreetSerializer
 
 
 class ListStreet(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Street.objects.all()
     serializer_class = StreetSerializer
 
 
 @api_view(["PUT"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def UpdateStreet(request):
     obj = get_object_or_404(Street, uuid=request.data['uuid'])
@@ -150,6 +166,7 @@ def UpdateStreet(request):
 
 
 @api_view(["DELETE"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def DeleteStreet(request):
     obj = get_object_or_404(Street, uuid=request.data['uuid'])
@@ -160,27 +177,32 @@ def DeleteStreet(request):
 
 
 class CreateHeatmap(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
 class ListHeatmap(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
 class UpdateHeatmap(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
 class DeleteHeatmap(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
-@api_view(["GET", "UPDATE"])
-@permission_classes((IsAuthenticated,))
+@api_view(["GET"])
+# @permission_classes((IsAuthenticated,))
+@permission_classes((AllowAny,))
 def get_layer(request):
     if request.user.is_superuser:
         queryset = Layer.objects.all()
@@ -188,12 +210,7 @@ def get_layer(request):
     else:
         from django.db.models import Q
         queryset = Layer.objects.filter(Q(is_general=True) | Q(user=request.user.id))
-        print('lol', queryset)
-    print(queryset)
     return Response(LayerSerializer(queryset, many=True).data)
-# class GetLayer(generics.ListAPIView):
-#     queryset = Layer.objects.all()
-#     serializer_class = LayerSerializer
 
 
 # class UpdateLayer(generics.RetrieveUpdateAPIView):
@@ -202,6 +219,7 @@ def get_layer(request):
 
 
 @api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def ListWays(request):
     vertexSerializer = VertexSerializer(data=request.data)
@@ -238,16 +256,14 @@ def ListWays(request):
         result = {'total_distance': distance, 'source_point': vertexSerializer.data['source_point'],
                   'destination_point': vertexSerializer.data['destination_point'], 'path': serialized.data}
 
-        with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-            cursor.execute("""UPDATE ways
-                SET barrier = FALSE
-                WHERE barrier = TRUE;""")
-
+        print(vertexSerializer.validated_data['barrier_time'])
+        remove_barriers.apply_async(eta=vertexSerializer.validated_data['barrier_time'])
         return Response(result)
 
 
 @api_view(["POST"])
-@permission_classes((IsAuthenticated,))
+# @permission_classes((IsAuthenticated,))
+@permission_classes((AllowAny,))
 def addLayer(request):
     serialized = UploadGeometrySerializer(data=request.data)
     if serialized.is_valid():
@@ -271,6 +287,7 @@ def addLayer(request):
 
 
 @api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def countObjects(request):
     serialized = PointRadiusSerializer(data=request.data)
@@ -304,6 +321,7 @@ def countObjects(request):
 
 
 @api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def buffer(request):
     serialized = PointRadiusSerializer(data=request.data)
@@ -337,6 +355,7 @@ def buffer(request):
 
 
 @api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def showNearest(request):
     serialized = PointRadiusSerializer(data=request.data)
@@ -367,7 +386,9 @@ def showNearest(request):
         return Response(json.dumps(pointsDict))
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
+
 @api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def get_buffer_zone(request):
     serialized = BufferZoneSerializer(data=request.data)
@@ -401,6 +422,7 @@ from geo.visibility_zones import get_visibility
 
 
 @api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
 @permission_classes((AllowAny,))
 def get_visibility_zones(request):
     serialized = VisibilityZonesSerializer(data=request.data)

@@ -68,6 +68,7 @@ class VertexSerializer(serializers.Serializer):
     source_point = serializers.CharField()      # follow this format: 'SRID=4326;POINT(-43.23456 72.4567772)'
     destination_point = serializers.CharField()
     barrier = serializers.CharField(required=False)
+    barrier_time = serializers.DateTimeField(required=False)
     closest_source = serializers.SerializerMethodField(required=False)
     closest_destination = serializers.SerializerMethodField(required=False)
     geometry = serializers.SerializerMethodField(required=False)
