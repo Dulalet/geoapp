@@ -38,13 +38,15 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class CreateBuilding(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Building.objects.all()
     serializer_class = BuildingSerializer
 
 
 class ListBuilding(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Building.objects.all()
     serializer_class = BuildingSerializer
 
@@ -73,13 +75,15 @@ def DeleteBuilding(request):
 
 
 class CreateBusStop(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = BusStop.objects.all()
     serializer_class = BusStopSerializer
 
 
 class ListBusStop(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = BusStop.objects.all()
     serializer_class = BusStopSerializer
 
@@ -108,13 +112,15 @@ def DeleteBusStop(request):
 
 
 class CreateRedLine(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = RedLine.objects.all()
     serializer_class = RedLineSerializer
 
 
 class ListRedLine(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = RedLine.objects.all()
     serializer_class = RedLineSerializer
 
@@ -143,13 +149,15 @@ def DeleteRedLine(request):
 
 
 class CreateStreet(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Street.objects.all()
     serializer_class = StreetSerializer
 
 
 class ListStreet(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Street.objects.all()
     serializer_class = StreetSerializer
 
@@ -178,25 +186,29 @@ def DeleteStreet(request):
 
 
 class CreateHeatmap(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
 class ListHeatmap(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
 class UpdateHeatmap(generics.RetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
 
 class DeleteHeatmap(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Heatmap.objects.all()
     serializer_class = HeatmapSerializer
 
