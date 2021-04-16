@@ -10,6 +10,7 @@ urlpatterns = [
     path('nearest/', showNearest, name='nearest'),
     path('bufferize/', get_buffer_zone, name='bufferize'),
     path('visibility/', get_visibility_zones),
+    path('importMedia/', import_media),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),
     path('buildings/create/', CreateBuilding.as_view(), name="buildings-create"),

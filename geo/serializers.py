@@ -177,3 +177,7 @@ class VisibilityZonesSerializer(serializers.Serializer):
 class CountObjectSerializer(serializers.Serializer):
     pointsNum = serializers.IntegerField()
     pointsList = serializers.ListField()
+
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()

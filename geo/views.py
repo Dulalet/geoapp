@@ -15,6 +15,7 @@ from geo.importshp import importLayer, gdf2layer, import_from_db, normalize_gdf
 from geo.nearestObjects import nearestPoints
 from geo.objectsInPolygon import numObjects
 from geo.serializers import *
+from geoapp.settings import MEDIA_URL
 from geoapp.tasks import remove_barriers
 
 
@@ -473,3 +474,19 @@ def get_visibility_zones(request):
                 result['vis_zone'] = str(vis)
         return Response(result)
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+# @permission_classes((IsAuthenticated,))
+@permission_classes((AllowAny,))
+def import_media(request):
+    serialized = FileUploadSerializer(data=request.data)
+    if serialized.is_valid():
+        media = os.getcwd()
+        fs = FileSystemStorage(location=media + MEDIA_URL)
+        file = serialized.validated_data['file']
+        filename = fs.save(file.name, file)
+        uploaded_file_url = fs.path(filename)
+        serialized.validated_data.pop('file')
+        return Response(uploaded_file_url, HTTP_202_ACCEPTED)
+
