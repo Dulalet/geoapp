@@ -5,3 +5,4 @@ from geo.models import *
 admin.site.register(Layer)
 admin.site.register(LayerFile)
 admin.site.register(Heatmap)
+admin.site.register(LayerGeometryMedia)

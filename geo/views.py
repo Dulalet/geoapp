@@ -497,7 +497,7 @@ def import_media(request):
         fs = FileSystemStorage(location=media + MEDIA_URL)
         file = serialized.validated_data['file']
         filename = fs.save(file.name, file)
-        uploaded_file_url = fs.path(filename)
+        uploaded_file_url = MEDIA_URL + filename
         serialized.validated_data.pop('file')
         return Response(uploaded_file_url, HTTP_202_ACCEPTED)
 

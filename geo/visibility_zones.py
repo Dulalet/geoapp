@@ -81,7 +81,6 @@ def get_visibility(filepath, second_filepath=None):
             rm merged.tiff whitemerged.tiff merged1.tiff merged2.tiff out1.tiff out2.tiff out11.tiff out22.tiff"""
         os.system(cmd)
         work_folder3 = Folder(str(path.parent) + '/final.tiff')
-        print('!!!!' + str(path.parent) + '/final.tiff')
         original_path3 = work_folder3[str(path.parent) + '/final.tiff']
         logger.info("original_path: %s", original_path3)
         original_ds3 = DataSet(original_path3)

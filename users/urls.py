@@ -23,7 +23,8 @@ urlpatterns = [
     # }
     path('register/', AuthViewSet.as_view({'post': 'register'})),
     path('logout/', AuthViewSet.as_view({'post': 'logout'})),
-    # path('password_change/', AuthViewSet.as_view({'post': 'password_change'})),
+    path('getUser/', AuthViewSet.as_view({'get': 'get_user'})),
+    path('password_change/', AuthViewSet.as_view({'post': 'password_change'})),
 ]
 
 

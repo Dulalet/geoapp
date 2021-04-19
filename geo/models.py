@@ -25,9 +25,10 @@ class Building(models.Model):
     shape_le_1 = models.FloatField(blank=True, null=True)
     shape_area = models.FloatField(blank=True, null=True)
     wkb_geometry = models.GeometryField(srid=3857, blank=True, null=True)
+    media = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'buildings_project'
 
 
@@ -38,9 +39,10 @@ class BusStop(models.Model):
     platformx = models.CharField(max_length=100, blank=True, null=True)
     platformy = models.CharField(max_length=100, blank=True, null=True)
     wkb_geometry = models.PointField(srid=3857, blank=True, null=True)
+    media = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'bus_stops_project1'
 
 
@@ -52,9 +54,10 @@ class RedLine(models.Model):
     shape_leng = models.FloatField(blank=True, null=True)
     shape_le_1 = models.FloatField(blank=True, null=True)
     wkb_geometry = models.LineStringField(srid=3857, blank=True, null=True)
+    media = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'red_lines_project'
 
 
@@ -69,9 +72,10 @@ class Street(models.Model):
     shape_leng = models.FloatField(blank=True, null=True)
     shape_le_1 = models.FloatField(blank=True, null=True)
     wkb_geometry = models.GeometryField(srid=3857, blank=True, null=True)
+    media = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'streets_project'
 
 
@@ -149,13 +153,15 @@ class Layer(models.Model):
     def __str__(self):
         return self.name
 
-    # def save(self, *args, **kwargs):
-    #     if not self.user:
-    #         self.user = self.get_user()
-    #     return super(Layer, self).save(*args, **kwargs)
-    #
-    # def get_user(self):
-    #     return request.User
+
+class LayerGeometryMedia(models.Model):
+    layer = models.ForeignKey(Layer, on_delete=models.CASCADE, null=True)
+    geometry_object = models.GeometryField(dim=3)
+    media = models.CharField(max_length=100, null=True, default=None)
+
+    class Meta:
+        managed = True
+        db_table = 'geo_layergeometrymedia'
 
 
 class LayerFile(models.Model):

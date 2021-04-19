@@ -11,7 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry, GeometryCollection
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from geo.models import Layer
+from geo.models import Layer, LayerGeometryMedia
 
 
 def gdf2layer(name, filepath, user):
@@ -37,6 +37,7 @@ def gdf2layer(name, filepath, user):
     layer.slug = name
     layer.url = 'https://sacral.openlayers.kz/geo/' + layer.slug + '/'
     layer.type = geomList[0].geom_type
+    gdf['geometry'] = None
     layer.data = gdf.to_json()
     layer.user = user
     if user.is_superuser:
@@ -44,6 +45,11 @@ def gdf2layer(name, filepath, user):
     layer.geom = geometry
     try:
         layer.save()
+        for geom in geomList:
+            geometries_to_save = []
+            layer_geometry = LayerGeometryMedia(layer=layer, geometry_object=geom, media=None)
+            geometries_to_save.append(layer_geometry)
+            LayerGeometryMedia.objects.bulk_create(geometries_to_save)
     except Exception as e:
         print(e)
         # return Response('Could not save the file, it can be too long', HTTP_400_BAD_REQUEST)
