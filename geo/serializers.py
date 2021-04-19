@@ -164,13 +164,13 @@ class BufferZoneSerializer(serializers.Serializer):
 class VisibilityZonesSerializer(serializers.Serializer):
     observer_x = serializers.FloatField()
     observer_y = serializers.FloatField()
-    observer_radius = serializers.IntegerField(default=150)
-    observer_height = serializers.IntegerField(default=10)
+    observer_radius = serializers.IntegerField(required=False, default=150)
+    observer_height = serializers.IntegerField(required=False, default=10)
     file = serializers.FileField()
-    second_observer_x = serializers.FloatField(default=None)
-    second_observer_y = serializers.FloatField(default=None)
-    second_observer_radius = serializers.IntegerField(default=150)
-    second_observer_height = serializers.IntegerField(default=10)
+    second_observer_x = serializers.FloatField(required=False, default=None)
+    second_observer_y = serializers.FloatField(required=False, default=None)
+    second_observer_radius = serializers.IntegerField(required=False, default=150)
+    second_observer_height = serializers.IntegerField(required=False, default=10)
     # second_file = serializers.FileField(default=None)
 
 

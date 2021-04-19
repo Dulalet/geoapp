@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from pathlib import Path
 
@@ -12,8 +13,6 @@ from scipy.ndimage import gaussian_filter, binary_erosion, binary_dilation
 from skimage.filters import threshold_otsu
 
 
-# tree=STRtree()
-# tree.query()
 def set_georeference(plain_geom, ds: DataSet, nrows=None):
     transform = ds.transform
     nrows = nrows or ds.array.shape[0]
@@ -41,9 +40,6 @@ def get_visibility(filepath, second_filepath=None):
     original_path = work_folder[filepath]
     logger.info("original_path: %s", original_path)
     original_ds = DataSet(original_path)
-    # plt.imshow(original_ds.array)
-    # plt.show()
-    # return
 
     orig_array = np.where(original_ds.array == -9999, np.nan, original_ds.array)
     orig_array = np.where(np.isnan(orig_array), np.nanmin(orig_array), orig_array)
@@ -74,34 +70,31 @@ def get_visibility(filepath, second_filepath=None):
 
     # --------------------------------------------------------------
         path = Path(filepath)
-        cmd = f"""cd {path}
-            gdal_merge.py -init "0 0" -o merged.tif out1.tiff out2.tiff
-            gdal_calc.py -A merged.tif --outfile=whitemerged.tif --calc="A * 0" --type=Int32
-            gdal_merge.py -init "0 255" -o merged1.tif whitemerged.tif out1.tiff
-            gdal_merge.py -init "0 255" -o merged2.tif whitemerged.tif out2.tiff
-            gdal_calc.py -A merged1.tif -B merged2.tif --outfile=final.tif --calc="A + B" --type=Int32
-            rm merged.tif whitemerged.tif merged1.tif merged2.tif""".format(path=path.parent)
-
-        # work_folder3 = Folder('/home/daulet/Desktop/zones/final.tif')
-        # original_path3 = work_folder3['/home/daulet/Desktop/zones/final.tif']
-        work_folder3 = Folder(str(path.parent) + '/final.tif')
-        original_path3 = work_folder3[str(path.parent) + '/final.tif']
+        cmd = f"""cd {path.parent}
+            gdal_translate out1.tiff out11.tiff -ot Int32
+            gdal_translate out2.tiff out22.tiff -ot Int32
+            gdal_merge.py -init "0 0" -o merged.tiff -ot Int32 out1.tiff out2.tiff
+            gdal_calc.py -A merged.tiff --outfile=whitemerged.tiff --calc="A * 0" --type=Int32 --overwrite
+            gdal_merge.py -init "0 0" -o merged1.tiff -ot Int32 whitemerged.tiff out1.tiff 
+            gdal_merge.py -init "0 0" -o merged2.tiff -ot Int32 whitemerged.tiff out2.tiff
+            gdal_calc.py -A merged1.tiff -B merged2.tiff --outfile=final.tiff --calc="A + B" --type=Int32 --overwrite
+            rm merged.tiff whitemerged.tiff merged1.tiff merged2.tiff out1.tiff out2.tiff out11.tiff out22.tiff"""
+        os.system(cmd)
+        work_folder3 = Folder(str(path.parent) + '/final.tiff')
+        print('!!!!' + str(path.parent) + '/final.tiff')
+        original_path3 = work_folder3[str(path.parent) + '/final.tiff']
         logger.info("original_path: %s", original_path3)
         original_ds3 = DataSet(original_path3)
-        # plt.imshow(original_ds3.array)
-        # plt.show()
-        # return
-
-        orig_array3 = np.where(original_ds3.array > 500, original_ds3.array, 0)
+        orig_array3 = np.where(original_ds3.array > 300, original_ds3.array, 0)
         orig_array3 = np.where(np.isnan(orig_array3), np.nanmin(orig_array3), orig_array3)
         filtered_array3 = gaussian_filter(orig_array3, sigma=1)
-        # plt.show()
-        # return
         otsu_threshold3 = threshold_otsu(filtered_array3)
         mask3 = filtered_array3 > otsu_threshold3
         eroded_mask3 = binary_erosion(mask3, iterations=1)
         filtered_mask3: np.ndarray = binary_dilation(eroded_mask3, iterations=1).astype(int)
+
         # geoms3: gpd.GeoSeries = vectorize(orig_array3>500, work_folder3['vectorized3.geojson'], original_ds3)
+
         geoms3: gpd.GeoSeries = vectorize(filtered_mask3, work_folder3['vectorized3.geojson'], original_ds3)
 
         return geoms, geoms2, geoms3
