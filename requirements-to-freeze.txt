@@ -11,3 +11,4 @@ celery
 psycopg2-binary~=2.8.6
 celery
 redis
+django-cors-headers
