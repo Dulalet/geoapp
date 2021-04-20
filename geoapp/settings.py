@@ -108,7 +108,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': os.getenv('DEFAULT_DB_PASSWORD') if os.getenv('DEFAULT_DB_PASSWORD') else 'Cwau8JEumEZWDEPB',
         'HOST': os.getenv('DEFAULT_DB_HOST') if os.getenv('DEFAULT_DB_HOST') else '95.59.124.163',
-        'PORT': '5455',
+        'PORT': os.getenv('DEFAULT_DB_PORT') if os.getenv('DEFAULT_DB_PORT') else '5455',
     }
 }
 
