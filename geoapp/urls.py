@@ -27,11 +27,9 @@ schema_view = get_swagger_view(title='geoapp')
 urlpatterns = [
     path('', schema_view),
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('geo/', include('geo.urls')),
     path('', include('users.urls')),
 
     path('getLayers/', get_layer, name="layers"),
-    path('getLayers/<int:pk>', get_layer, name="update-layer"),
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 ]
