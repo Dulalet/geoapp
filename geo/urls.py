@@ -1,7 +1,6 @@
 from django.urls import path
 from .views import *
 
-
 urlpatterns = [
     path('path/', ListWays, name="path"),
     path('addLayer/', addLayer, name='addLayer'),
@@ -11,6 +10,8 @@ urlpatterns = [
     path('bufferize/', get_buffer_zone, name='bufferize'),
     path('visibility/', get_visibility_zones),
     path('importMedia/', import_media),
+    path('import3Dmodel/', Import3DModel.as_view(), name='import3d'),
+    path('get3Dlist/', get_3d_model, name='import3d'),
 
     path('buildings/', ListBuilding.as_view(), name="buildings"),
     path('buildings/create/', CreateBuilding.as_view(), name="buildings-create"),

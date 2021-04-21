@@ -1,13 +1,16 @@
 import os
+import zipfile
 from pathlib import Path
 
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
+from rest_framework.views import APIView
 
 from geo.buffer import buffer_generate
 from geo.forms import *
@@ -351,7 +354,8 @@ def buffer(request):
             serialized.validated_data.pop('file')
             try:
                 gdf = importLayer(uploaded_file_url)
-                kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+                kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, gdf,
+                                                           serialized.validated_data['from_file'])
             except ImportError:
                 return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
             finally:
@@ -359,7 +363,8 @@ def buffer(request):
         else:
             try:
                 gdf = import_from_db(serialized.validated_data['id'])
-                kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, gdf, serialized.validated_data['from_file'])
+                kpp_points, randomPoints = buffer_generate(pointX, pointY, radius, gdf,
+                                                           serialized.validated_data['from_file'])
             except:
                 return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
         return Response({'KPP': kpp_points.to_json(),
@@ -500,3 +505,58 @@ def import_media(request):
         serialized.validated_data.pop('file')
         return Response(uploaded_file_url, HTTP_202_ACCEPTED)
 
+
+class Import3DModel(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, format=None):
+        file_object = request.FILES.get('file', None)
+        file_name = request.POST.get('file_name', None)
+        media = os.getcwd()
+        if file_object:
+            if not file_name:
+                file_name = file_object.name
+            root_directory = media + MEDIA_URL + '3Dmodels/' + f'{file_name}'
+            try:
+                list_of_models = os.listdir(media + MEDIA_URL + '3Dmodels/')
+            except FileNotFoundError:
+                print('no such directory')
+                list_of_models = []
+            old_models = Model3DZip.objects.exclude(name__in=list_of_models)
+            old_models.delete()
+            models_exists = Model3DZip.objects.filter(name=file_name)
+            if models_exists:
+                return Response({"message": 'Файл с таким именем уже существует'})
+            else:
+                try:
+                    with zipfile.ZipFile(file_object, 'r') as z:
+
+                        try:
+                            z.getinfo("index.json")
+                            z.extractall(root_directory)
+                            list_of_models = os.listdir(media + MEDIA_URL + '3Dmodels/')
+                            old_models = Model3DZip.objects.exclude(name__in=list_of_models)
+                            old_models.delete()
+                        except KeyError:
+                            return Response({"message": 'файл index не найден в нужной директории'})
+
+                    for root, dirs, files in os.walk(root_directory):
+                        for file in files:
+                            if file == "index.json":
+                                relative_path = os.path.relpath(root)
+                                model_3d = Model3DZip.objects.create(name=file_name, url=relative_path + '/index.json')
+                                model_3d.save()
+                                return Response({"message": 'Файл был успешно сохранен'})
+
+                    return Response({"message": 'Файл не был сохранен'})
+                except zipfile.BadZipFile:
+                    return Response({"message": 'Вы загрузили файл не в формате zip'})
+
+
+@api_view(["GET"])
+# @permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated,))
+def get_3d_model(request):
+    queryset = Model3DZip.objects.all()
+    return Response(Model3DSerializer(queryset, many=True).data)
