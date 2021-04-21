@@ -513,13 +513,16 @@ class Import3DModel(APIView):
     def post(self, request, format=None):
         file_object = request.FILES.get('file', None)
         file_name = request.POST.get('file_name', None)
+        folder3D = '3Dmodels/'
         media = os.getcwd()
         if file_object:
             if not file_name:
                 file_name = file_object.name
-            root_directory = media + MEDIA_URL + '3Dmodels/' + f'{file_name}'
+                if file_name.endswith('.zip'):
+                    file_name = file_name.replace('.zip', '')
+            root_directory = media + MEDIA_URL + folder3D + f'{file_name}'
             try:
-                list_of_models = os.listdir(media + MEDIA_URL + '3Dmodels/')
+                list_of_models = os.listdir(media + MEDIA_URL + folder3D)
             except FileNotFoundError:
                 print('no such directory')
                 list_of_models = []
@@ -535,7 +538,7 @@ class Import3DModel(APIView):
                         try:
                             z.getinfo("index.json")
                             z.extractall(root_directory)
-                            list_of_models = os.listdir(media + MEDIA_URL + '3Dmodels/')
+                            list_of_models = os.listdir(media + MEDIA_URL + folder3D)
                             old_models = Model3DZip.objects.exclude(name__in=list_of_models)
                             old_models.delete()
                         except KeyError:
