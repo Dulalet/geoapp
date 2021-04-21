@@ -188,3 +188,15 @@ class Heatmap(models.Model):
     class Meta:
         managed = False
         db_table = 'heatmap'
+
+
+class Model3DZip(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    url = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        managed = True
+        db_table = 'models_3d_zip'
+
+    def __str__(self):
+        return self.name
