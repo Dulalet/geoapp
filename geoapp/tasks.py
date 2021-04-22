@@ -3,6 +3,7 @@ from celery import shared_task
 from django.db import connections
 
 
+# Task для celery для удаления барьеров по времени
 @shared_task
 def remove_barriers():
     conn = connections['default']

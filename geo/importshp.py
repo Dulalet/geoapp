@@ -14,6 +14,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from geo.models import Layer, LayerGeometryMedia
 
 
+# функция для сохранения файла в базу данных
 def gdf2layer(name, filepath, user):
     # gdf = gdf.truncate(after=999)
     gdf = importLayer(filepath)
@@ -57,6 +58,7 @@ def gdf2layer(name, filepath, user):
     return layer
 
 
+# функция которая принимает различные типы файлов и возвращает geopandas GeoDataFrame объект
 def importLayer(filepath):
     path = Path(filepath)
     name_of_file = ntpath.split(filepath)[1]
@@ -92,6 +94,7 @@ from sqlalchemy import create_engine
 from geoapp.settings import DATABASES
 
 
+# функция которая возвращает geopandas GeoDataFrame объект из базы данных
 def import_from_db(layerid):
     db_connection_url = f"postgresql://{DATABASES['default']['USER']}:{DATABASES['default']['PASSWORD']}" \
                         f"@{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}/{DATABASES['default']['NAME']}"
@@ -101,9 +104,9 @@ def import_from_db(layerid):
     return gdf
 
 
+# функция для получения отдельной геометрии из GeometryCollection
 def normalize_gdf(gdf):
     geoms = gdf.geometry.to_list()
     objectsGDF = geopandas.GeoDataFrame({'geometry': geoms[0].geoms})
     return objectsGDF
 
-# exec(open("geo/importshp.py").read()) this command is to run this file from shell

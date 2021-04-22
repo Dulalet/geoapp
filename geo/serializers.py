@@ -86,6 +86,7 @@ class VertexSerializer(serializers.Serializer):
     closest_destination = serializers.SerializerMethodField(required=False)
     geometry = serializers.SerializerMethodField(required=False)
 
+    # функция для поиска точки на слое улиц ближайшей к точке начала маршрута
     def get_closest_source(self, obj):
         # point = Point(obj['point_from_x'], obj['point_from_y'], srid=4326)
         try:
@@ -105,6 +106,7 @@ class VertexSerializer(serializers.Serializer):
             print(row)
         return row[0]
 
+    # функция для поиска точки на слое улиц ближайшей к точке конца маршрута
     def get_closest_destination(self, obj):
         # point = Point(obj['point_to_x'], obj['point_to_y'], srid=4326)
         try:
@@ -124,6 +126,7 @@ class VertexSerializer(serializers.Serializer):
             print(row)
         return row[0]
 
+    # функция для преобразования геометрии барьера из wkt формата в геометрический объект
     def get_geometry(self, obj):
         try:
             geom = GEOSGeometry(obj['barrier'])

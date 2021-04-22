@@ -37,6 +37,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
+# ------------------- CRUD для buildings -----------------------
 class CreateBuilding(generics.ListCreateAPIView):
     # permission_classes = [IsAuthenticated]
     permission_classes = [IsAuthenticated]
@@ -74,6 +75,7 @@ def DeleteBuilding(request):
     return Response('deleted', HTTP_202_ACCEPTED)
 
 
+# ------------------- CRUD для busstops -----------------------
 class CreateBusStop(generics.ListCreateAPIView):
     # permission_classes = [IsAuthenticated]
     permission_classes = [IsAuthenticated]
@@ -111,6 +113,7 @@ def DeleteBusStop(request):
     return Response('deleted', HTTP_202_ACCEPTED)
 
 
+# ------------------- CRUD для redlines -----------------------
 class CreateRedLine(generics.ListCreateAPIView):
     # permission_classes = [IsAuthenticated]
     permission_classes = [IsAuthenticated]
@@ -148,6 +151,7 @@ def DeleteRedLine(request):
     return Response('deleted', HTTP_202_ACCEPTED)
 
 
+# ------------------- CRUD для streets -----------------------
 class CreateStreet(generics.ListCreateAPIView):
     # permission_classes = [IsAuthenticated]
     permission_classes = [IsAuthenticated]
@@ -185,6 +189,7 @@ def DeleteStreet(request):
     return Response('deleted', HTTP_202_ACCEPTED)
 
 
+# ------------------- CRUD для heatmap -----------------------
 class CreateHeatmap(generics.ListCreateAPIView):
     # permission_classes = [IsAuthenticated]
     permission_classes = [IsAuthenticated]
@@ -213,6 +218,7 @@ class DeleteHeatmap(generics.DestroyAPIView):
     serializer_class = HeatmapSerializer
 
 
+# ------------------- получить загруженные слои по токену -----------------------
 @api_view(["GET"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
@@ -230,7 +236,7 @@ def get_layer(request):
 #     queryset = Layer.objects.all()
 #     serializer_class = LayerSerializer
 
-
+# ------------------- расчет маршрутов -----------------------
 @api_view(["POST"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
@@ -243,6 +249,7 @@ def ListWays(request):
         if vertexSerializer.data['geometry'] is not None:
             conn = connections['default']
             conn.ensure_connection()
+            # SQL запрос для добавления барьеров используя данную геометрию
             with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
                 cursor.execute("""UPDATE ways
                                 SET barrier=TRUE
@@ -254,6 +261,7 @@ def ListWays(request):
                                 WHERE ways.gid = t.gid;""".format(geom=vertexSerializer.data['geometry']))
         conn = connections['default']
         conn.ensure_connection()
+        # SQL для расчета маршрутов с использованием функции pgr_dijkstra из расширения pgRouting для postgis
         with conn.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
             cursor.execute("""SELECT * FROM pgr_dijkstra(
                 'select gid as id, source, target, length_m as cost from ways where ways.barrier=false',
@@ -274,6 +282,7 @@ def ListWays(request):
         return Response(result)
 
 
+# ------------------- добавление слоев с привязкой к пользователю -----------------------
 @api_view(["POST"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
@@ -281,6 +290,7 @@ def addLayer(request):
     serialized = UploadGeometrySerializer(data=request.data)
     if serialized.is_valid():
         media = os.getcwd()
+        # сохранение файла и получение его URL
         fs = FileSystemStorage(location=media + '/layer_files')
         name = serialized.validated_data['name']
         file = serialized.validated_data['file']
@@ -299,6 +309,7 @@ def addLayer(request):
     return Response('Error', HTTP_400_BAD_REQUEST)
 
 
+# ------------------- расчет объектов в заданном радиусе -----------------------
 @api_view(["POST"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
@@ -308,6 +319,7 @@ def countObjects(request):
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
         radius = serialized.validated_data['radius']
+        # расчет объектов будет производиться из файла если from_file = True, из базы данных если False
         if serialized.validated_data['from_file']:
             media = os.getcwd()
             fs = FileSystemStorage(location=media + '/layer_files')
@@ -333,6 +345,7 @@ def countObjects(request):
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
+# ------------------- расставление объектов (КПП и случайные точки) в буферной зоне -----------------------
 @api_view(["POST"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
@@ -342,6 +355,7 @@ def buffer(request):
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
         radius = serialized.validated_data['radius']
+        # расставление объектов будет производиться из файла если from_file = True, из базы данных если False
         if serialized.validated_data['from_file']:
             media = os.getcwd()
             fs = FileSystemStorage(location=media + '/layer_files')
@@ -367,6 +381,7 @@ def buffer(request):
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
+# ------------------- поиск ближайших объектов -----------------------
 @api_view(["POST"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
@@ -376,6 +391,7 @@ def showNearest(request):
         pointX = serialized.validated_data['pointX']
         pointY = serialized.validated_data['pointY']
         radius = serialized.validated_data['radius']
+        # поиск ближайших объектов будет производиться из файла если from_file = True, из базы данных если False
         if serialized.validated_data['from_file']:
             media = os.getcwd()
             fs = FileSystemStorage(location=media + '/layer_files')
@@ -400,12 +416,14 @@ def showNearest(request):
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
+# ------------------- создание буферных зон с учетом контуров зданий -----------------------
 @api_view(["POST"])
 # @permission_classes((IsAuthenticated,))
 @permission_classes((IsAuthenticated,))
 def get_buffer_zone(request):
     serialized = BufferZoneSerializer(data=request.data)
     if serialized.is_valid():
+        # буферизация будет производиться из файла если from_file = True, из базы данных если False
         if serialized.validated_data['from_file']:
             media = os.getcwd()
             fs = FileSystemStorage(location=media + '/layer_files')
@@ -434,6 +452,7 @@ def get_buffer_zone(request):
 from geo.visibility_zones import get_visibility
 
 
+# ------------------- расчет зон видимости (для одного или двух наблюдателей) -----------------------
 @api_view(["POST"])
 @permission_classes((IsAuthenticated,))
 def get_visibility_zones(request):
@@ -450,6 +469,8 @@ def get_visibility_zones(request):
         second_observer_height = serialized.validated_data['second_observer_height']
         # second_file = serialized.validated_data['second_file']
         media = os.getcwd()
+
+        # сохранение файла и получение его URL:
         fs = FileSystemStorage(location=media + '/visibility_files')
         filename = fs.save(file.name, file)
         uploaded_file_url = fs.path(filename)
@@ -459,8 +480,11 @@ def get_visibility_zones(request):
         file_path = str(path.parent) + '/out1.tiff'
         os.system(cmd)
         result = {}
+        # если задан второй наблюдатель:
         if second_observer_x and second_observer_y:
-            print('test')
+            # команда для выполнения в командной строке, использует функцию gdal_viewshed из библиотеки GDAL>3.1.0,
+            # которая принимает geotiff файл с объектами, радиус видимости, координаты наблюдателя и его высоту и
+            # возвращает растровый файл с расчитанными зонами видимости
             cmd = f"gdal_viewshed -md {second_observer_radius} -ox {second_observer_x} -oy {second_observer_y} -oz {second_observer_height} -vv 200 {uploaded_file_url} {path.parent}/out2.tiff "
             os.system(cmd)
             second_file_path = str(path.parent) + '/out2.tiff'
@@ -486,6 +510,7 @@ def get_visibility_zones(request):
     return Response('Error, invalid input', HTTP_400_BAD_REQUEST)
 
 
+# ------------------- импорт медиа -----------------------
 @api_view(["POST"])
 @permission_classes((IsAuthenticated,))
 # @permission_classes((AllowAny,))

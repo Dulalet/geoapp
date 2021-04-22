@@ -36,11 +36,13 @@ def vectorize(mask, filepath, ds: DataSet, nrows=None):
 
 @logger.trace()
 def get_visibility(filepath, second_filepath=None):
+    # считывание файла и создание numpy array из него:
     work_folder = Folder(filepath)
     original_path = work_folder[filepath]
     logger.info("original_path: %s", original_path)
     original_ds = DataSet(original_path)
 
+    # удаление лишних пикселей:
     orig_array = np.where(original_ds.array == -9999, np.nan, original_ds.array)
     orig_array = np.where(np.isnan(orig_array), np.nanmin(orig_array), orig_array)
     filtered_array = gaussian_filter(orig_array, sigma=1)
@@ -49,9 +51,11 @@ def get_visibility(filepath, second_filepath=None):
     eroded_mask = binary_erosion(mask, iterations=5)
     filtered_mask: np.ndarray = binary_dilation(eroded_mask, iterations=5).astype(int)
     # geoms: gpd.GeoSeries = vectorize(orig_array>250, work_folder['vectorized.geojson'], original_ds)
+
+    # создание векторной геометрии из numpy array:
     geoms: gpd.GeoSeries = vectorize(filtered_mask, work_folder['vectorized.geojson'], original_ds)
 
-    # ----------------------------------------------------------
+    # ----------------------------если расчет проводится для двух наблюдателей------------------------------
     if second_filepath is not None:
         work_folder2 = Folder(second_filepath)
         original_path2 = work_folder2[second_filepath]
@@ -70,6 +74,7 @@ def get_visibility(filepath, second_filepath=None):
 
     # --------------------------------------------------------------
         path = Path(filepath)
+        # команды выполняющиеся в командной строке для создания растрового файла с обоюдной зоной видимости (GDAL>3.1.0)
         cmd = f"""cd {path.parent}
             gdal_translate out1.tiff out11.tiff -ot Int32
             gdal_translate out2.tiff out22.tiff -ot Int32
@@ -80,6 +85,7 @@ def get_visibility(filepath, second_filepath=None):
             gdal_calc.py -A merged1.tiff -B merged2.tiff --outfile=final.tiff --calc="A + B" --type=Int32 --overwrite
             rm merged.tiff whitemerged.tiff merged1.tiff merged2.tiff out1.tiff out2.tiff out11.tiff out22.tiff"""
         os.system(cmd)
+        # получение финального файла с обоюдной зоной видимости
         work_folder3 = Folder(str(path.parent) + '/final.tiff')
         original_path3 = work_folder3[str(path.parent) + '/final.tiff']
         logger.info("original_path: %s", original_path3)
@@ -94,11 +100,12 @@ def get_visibility(filepath, second_filepath=None):
 
         # geoms3: gpd.GeoSeries = vectorize(orig_array3>500, work_folder3['vectorized3.geojson'], original_ds3)
 
+        # получение веторной геометрии для обоюдной зоны видимости
         geoms3: gpd.GeoSeries = vectorize(filtered_mask3, work_folder3['vectorized3.geojson'], original_ds3)
 
         return geoms, geoms2, geoms3
     return geoms
-    # ----------visualize and check:---------------------------
+    # ----------вспомогательный код для визуализации и теста:---------------------------
     # print('!!!!!!!!!', geoms)
     # print('!!!!!!!!!', geoms2)
     # print('!!!!!!!!!', geoms3)
@@ -116,12 +123,6 @@ def get_visibility(filepath, second_filepath=None):
     # plotter.plot(lbrtwh=(1e-3, 1e-3, 1 - 1e-3, 1 - 1e-3, 1e-3, 0)).show()
     # return
     # ----------------------------------------------------------
-
-    # gdal_merge.py -init "0 0" -o merged.tif out1.tiff out2.tiff
-    # gdal_calc.py -A merged.tif --outfile=whitemerged.tif --calc="A * 0" --type=Int32
-    # gdal_merge.py -init "0 255" -o merged1.tif whitemerged.tif out1.tiff
-    # gdal_merge.py -init "0 255" -o merged2.tif whitemerged.tif out2.tiff
-    # gdal_calc.py -A merged1.tif -B merged2.tif --outfile=final.tif --calc="A + B" --type=Int32
 
 if __name__ == '__main__':
     get_visibility('/home/daulet/Desktop/zones/out1.tiff', '/home/daulet/Desktop/zones/out2.tiff')
