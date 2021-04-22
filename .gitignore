@@ -13,6 +13,8 @@ final.tif
 merged.tif
 merged1.tif
 merged2.tif
+env/
+media/
 out1.tiff
 out1box.tif
 out2.tiff
@@ -20,3 +22,4 @@ out2box.tif
 result.tif
 two_obs.tiff
 whitemerged.tif
+.DS_Store

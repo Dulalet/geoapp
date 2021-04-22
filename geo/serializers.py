@@ -19,7 +19,7 @@ def file_validator(file):
     max_file_size = 1024 * 1024 * 20  # 20MB
     if file.size > max_file_size:
         raise serializers.ValidationError(('Max file size is {} and your file size is {}'.
-                                          format(max_file_size, file.size)))
+                                           format(max_file_size, file.size)))
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -57,7 +57,8 @@ class RedLineSerializer(serializers.HyperlinkedModelSerializer):
 class StreetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Street
-        fields = ['uuid', 'ogc_fid', 'id', 'name', 'type', 'old_type', 'abreviatur', 'shape_leng', 'shape_le_1', 'wkb_geometry']
+        fields = ['uuid', 'ogc_fid', 'id', 'name', 'type', 'old_type', 'abreviatur', 'shape_leng', 'shape_le_1',
+                  'wkb_geometry']
 
 
 class DijkstraSerializer(serializers.Serializer):
@@ -78,7 +79,7 @@ class DijkstraSerializer(serializers.Serializer):
 
 
 class VertexSerializer(serializers.Serializer):
-    source_point = serializers.CharField()      # follow this format: 'SRID=4326;POINT(-43.23456 72.4567772)'
+    source_point = serializers.CharField()  # follow this format: 'SRID=4326;POINT(-43.23456 72.4567772)'
     destination_point = serializers.CharField()
     barrier = serializers.CharField(required=False)
     barrier_time = serializers.DateTimeField(required=False)
@@ -197,3 +198,9 @@ class CountObjectSerializer(serializers.Serializer):
 
 class FileUploadSerializer(serializers.Serializer):
     file = serializers.FileField(validators=[file_validator])
+
+
+class Model3DSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Model3DZip
+        fields = '__all__'

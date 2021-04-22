@@ -1,7 +1,6 @@
 from django.urls import path
 from .views import *
 
-
 urlpatterns = [
     # api для расчета маршрутов с учтом барьеров
     path('path/', ListWays, name="path"),
@@ -26,6 +25,8 @@ urlpatterns = [
 
     # api для импорта медиа
     path('importMedia/', import_media),
+    path('import3Dmodel/', Import3DModel.as_view(), name='import3d'),
+    path('get3Dlist/', get_3d_model, name='import3d'),
 
     # CRUD для buildings
     path('buildings/', ListBuilding.as_view(), name="buildings"),
